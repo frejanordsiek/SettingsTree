@@ -135,7 +135,7 @@ class QSettingsEditor(QtGui.QWidget):
         all_parents = True
 
         for k, v in node['children'].items():
-            if 'is_parent' not in v:
+            if 'children' not in v:
                 all_parents = False
 
         # If they aren't all parents, then there is a problem and this
@@ -155,7 +155,7 @@ class QSettingsEditor(QtGui.QWidget):
             all_parents = True
             all_settings = True
             for k2, v2 in v['children'].items():
-                if 'is_parent' not in v2:
+                if 'children' not in v2:
                     all_parents = False
                 else:
                     all_settings = False

@@ -64,8 +64,7 @@ class SettingsIO(object):
     -----
     `settings` is a ``dict`` representing the various settings to be
     read/written. Each element is a ``dict`` itself with a specific set
-    of keys. If the element is a parent of other elements, then it
-    should have a key named 'is_parent' set to `True` and a key
+    of keys. If the element is a parent of other elements, a key
     named 'children' which contains a ``dict`` of all its children. If
     it is not a parent, the element represents a setting. It must then
     have keys named 'value' and 'validator'. 'value' is the element that
@@ -74,8 +73,8 @@ class SettingsIO(object):
     child)`` which gives ``True`` if `value` is valid and ``False``
     otherwise given `settings` (it might depend on other settings) and
     the element of this particular setting (`child`). An element for a
-    setting must not have keys named 'is_parent' or 'children'. The root
-    node (`settings` itself) must be a parent node.
+    setting must not have a key named 'children'. The root node
+    (`settings` itself) must be a parent node.
 
     Recursion is used very heavily in this class for all operations, so
     `settings` should not be nested too deep.
@@ -85,7 +84,7 @@ class SettingsIO(object):
         if isinstance(settings, dict):
             self._settings = settings
         else:
-            self._settings = {'is_parent': True, 'children': {}}
+            self._settings = {'children': dict()}
 
         # Go through each node and set the 'path' field.
         self._settings['path'] = posixpath.sep
@@ -108,18 +107,17 @@ class SettingsIO(object):
         -----
         Each element is a ``dict`` itself with a specific set of keys.
         If the element is a parent of other elements, then it should
-        have a key named 'is_parent' set to `True` and a key named
-        'children' which contains a ``dict`` of all its children. If it
-        is not a parent, the element represents a setting. It must then
-        have keys named 'value' and 'validator'. 'value' is the element
-        that holds the current value of the setting. 'validator' is a
-        validation function that is called like ``valid =
-        validator(value, settings, child)`` which gives ``True`` if
-        `value` is valid and ``False`` otherwise given `settings` (it
-        might depend on other settings) and the element of this
-        particular setting (`child`). An element for a setting must not
-        have keys named 'is_parent' or 'children'. The root node
-        (`settings` itself) must be a parent node.
+        have a key named 'children' which contains a ``dict`` of all its
+        children. If it is not a parent, the element represents a
+        setting. It must then have keys named 'value' and
+        'validator'. 'value' is the element that holds the current value
+        of the setting. 'validator' is a validation function that is
+        called like ``valid = validator(value, settings, child)`` which
+        gives ``True`` if `value` is valid and ``False`` otherwise given
+        `settings` (it might depend on other settings) and the element
+        of this particular setting (`child`). An element for a setting
+        must not have a key named 'children'. The root node (`settings`
+        itself) must be a parent node.
 
         """
         return self._settings
@@ -128,7 +126,7 @@ class SettingsIO(object):
     def settings(self, settings2):
         # Extract the values from the given settings2 and then apply
         # them.
-        self.set_values(self._extract_values_node(settings2, False),
+        self.set_values(self._extract_values_node(settings2),
                         force=False)
 
     def json_dump(self, fp, **keywords):
@@ -708,8 +706,7 @@ class SettingsIO(object):
 
         # If it isn't a dict, or is not a parent, return []. If it a
         # parent, return all the children names.
-        if not isinstance(node, dict) or 'is_parent' not in node \
-                or not node['is_parent'] or 'children' not in node \
+        if not isinstance(node, dict) or 'children' not in node \
                 or not isinstance(node['children'], dict):
             return []
         else:
@@ -817,9 +814,9 @@ class SettingsIO(object):
         node = self.get_setting_by_path(spath)
 
         # Find out what it is, and then return that.
-        if 'is_parent' in node and node['is_parent']:
+        if 'children' in node and 'value' not in node:
             return 'parent'
-        elif 'is_parent' not in node and 'value' in node:
+        elif 'children' not in node and 'value' in node:
             return 'setting'
         else:
             return 'neither'
@@ -867,7 +864,7 @@ class SettingsIO(object):
         setting 'd'. Then they are compared.
 
         >>> import copy
-        >>> settings1 = {'is_parent': True, 'children': {
+        >>> settings1 = {'children': {
                          'a':{'value': 2}, 'b':{'value': 10.2},
                          'c':{'value': 'foo'}}}
         >>> settings2 = copy.deepcopy(settings1)
@@ -877,13 +874,11 @@ class SettingsIO(object):
         >>> settings1
         {'children': {'a': {'value': 2},
           'b': {'value': 10.2},
-          'c': {'value': 'foo'}},
-         'is_parent': True}
+          'c': {'value': 'foo'}}}
         >>> settings2
         {'children': {'a': {'value': 2},
           'c': {'value': 'bar'},
-          'd': {'value': 42}},
-         'is_parent': True}
+          'd': {'value': 42}}}
         >>> sio = SettingsIO(settings1)
         >>> sio2 = SettingsIO(settings2)
         >>> sio1.diff(sio2)
@@ -946,7 +941,7 @@ class SettingsIO(object):
         # their paths, and recursing into them if they are a parent.
         for name, child in node['children'].items():
             child['path'] = posixpath.join(rootpath, name)
-            if 'is_parent' in child and child['is_parent']:
+            if 'children' in child:
                 self._set_paths(child,
                                 posixpath.join(rootpath, name)
                                 + posixpath.sep)
@@ -992,8 +987,7 @@ class SettingsIO(object):
             return node
 
         # If node is not a parent, then it can't be found.
-        if 'is_parent' not in node or not node['is_parent'] \
-                or 'children' not in node:
+        if 'children' not in node:
             raise KeyError('Node isn''t a parent.')
 
         # Sanitize the path normalizing out '../' and stuff.
@@ -1094,7 +1088,7 @@ class SettingsIO(object):
         for k, v in node['children'].items():
             # If it is a parent node, then recurse one level deeper. If
             # it is instead a value node, extract the value.
-            if 'is_parent' in v and v['is_parent']:
+            if 'children' in v:
                 vals[k] = self._extract_values_node(v)
             else:
                 vals[k] = v['value']
@@ -1143,7 +1137,7 @@ class SettingsIO(object):
             # possibly converted from its numpy type, and then passed
             # through the validator before being put into settings.
 
-            if 'is_parent' in sv and sv['is_parent']:
+            if 'children' in sv:
                 if isinstance(values[k], dict):
                     sv = self._set_values_node(sv, \
                         values[k], force=force)
@@ -1204,11 +1198,9 @@ class SettingsIO(object):
 
         # The course of action depends on whether it is a parent or a
         # setting value node.
-        if 'is_parent' in node:
-            # If 'is_parent' isn't True, there isn't a 'children' key,
-            # or 'children' is not a dict; then the node is invalid.
-            if not node['is_parent'] or 'children' not in node \
-                    or not isinstance(node['children'], dict):
+        if 'children' in node:
+            # If  'children' is not a dict; then the node is invalid.
+            if not isinstance(node['children'], dict):
                 return [node['path']]
 
             # Recurse through all of its children, collecting a list of
@@ -1222,10 +1214,10 @@ class SettingsIO(object):
             return invalids
         else:
             # It is a setting value. It must have keys 'value' and
-            # 'validator' but not 'is_parent' and 'children'.
+            # 'validator' but not 'children'.
 
             if 'value' not in node or 'validator' not in node \
-                    or 'is_parent' in node or 'children' in node:
+                    or 'children' in node:
                 return [node['path']]
 
             # Run the value through the validator, and return if path if
