@@ -43,8 +43,6 @@ import io
 import posixpath
 import itertools
 
-import numpy as np
-
 
 class SettingsIO(object):
     """ Object to work with a tree of settings.
@@ -136,7 +134,7 @@ class SettingsIO(object):
         # Extract the values from the given settings2 and then apply
         # them.
         self.set_values(self._extract_values_node(settings2, False),
-                        force=False, convert_from_numpy=False)
+                        force=False)
 
     def json_dump(self, fp, **keywords):
         """ Writes setting values to a stream in JSON format.
@@ -167,7 +165,7 @@ class SettingsIO(object):
         json_loadf
 
         """
-        json.dump(self.extract_values(False), fp, **keywords)
+        json.dump(self.extract_values(), fp, **keywords)
 
     def json_dumps(self, **keywords):
         """ Turns setting values into a JSON formatted string.
@@ -201,7 +199,7 @@ class SettingsIO(object):
         json_loadf
 
         """
-        return json.dumps(self.extract_values(False), **keywords)
+        return json.dumps(self.extract_values(), **keywords)
 
     def json_dumpf(self, filename, **keywords):
         """ Writes setting values to a file in JSON format.
@@ -234,7 +232,7 @@ class SettingsIO(object):
         """
         with open(filename, 'wb') as f:
             tio = io.TextIOWrapper(io.BufferedWriter(f))
-            json.dump(self.extract_values(False), tio, **keywords)
+            json.dump(self.extract_values(), tio, **keywords)
             tio.flush()
             tio.close()
 
@@ -288,8 +286,7 @@ class SettingsIO(object):
         json_loadf
 
         """
-        return self.set_values(json.load(fp, **keywords), force=force,
-                               convert_from_numpy=False)
+        return self.set_values(json.load(fp, **keywords), force=force)
 
     def json_loads(self, s, force=False, **keywords):
         """ Reads setting values from a JSON formatted string.
@@ -341,8 +338,7 @@ class SettingsIO(object):
         json_loadf
 
         """
-        return self.set_values(json.loads(s, **keywords), force=force,
-                               convert_from_numpy=False)
+        return self.set_values(json.loads(s, **keywords), force=force)
 
     def json_loadf(self, filename, force=False, **keywords):
         """ Reads setting values from a file in JSON format.
@@ -398,8 +394,7 @@ class SettingsIO(object):
         with open(filename, 'rb') as f:
             tio = io.TextIOWrapper(io.BufferedReader(f))
             validity = self.set_values(json.load(tio, **keywords),
-                                       force=force,
-                                       convert_from_numpy=False)
+                                       force=force)
             tio.close()
 
         return validity
@@ -479,30 +474,8 @@ class SettingsIO(object):
         """
         return (0 == len(self.find_invalids(path)))
 
-    def extract_values(self, convert_to_numpy=False):
+    def extract_values(self):
         """ Returns the settings stripped down to just its values.
-
-        The data types of the individual settings values can optionally
-        be converted. The conversion from Python builtin types to
-        :py:mod:`numpy` types follows this table
-
-        ============  ============================
-        builtin type  Numpy type
-        ============  ============================
-        bool          :py:class:`numpy.bool_`
-        int           :py:class:`numpy.int64`
-        float         :py:class:`numpy.float64`
-        complex       :py:class:`numpy.complex128`
-        str           :py:class:`numpy.str_`
-        bytes         :py:class:`numpy.string_`
-        ============  ============================
-
-        Parameters
-        ----------
-        convert_to_numpy : bool, optional
-            Whether to convert Python built in types to their equivalent
-            :py:mod:`numpy` types or not. Default, ``False``, is no
-            conversion. See the table for conversions.
 
         Returns
         -------
@@ -519,26 +492,10 @@ class SettingsIO(object):
         exhausted.
 
         """
-        return self._extract_values_node(self._settings,
-                                         convert_to_numpy)
+        return self._extract_values_node(self._settings)
 
-    def set_values(self, values, force=False, convert_from_numpy=False):
+    def set_values(self, values, force=False):
         """ Apply a set of values to the settings.
-
-        The data types of the individual settings values can optionally
-        be converted. The conversion from :py:mod:`numpy` types to
-        Python builtin types follows this table
-
-        ============  ============================
-        builtin type  Numpy type
-        ============  ============================
-        bool          :py:class:`numpy.bool_`
-        int           :py:class:`numpy.int64`
-        float         :py:class:`numpy.float64`
-        complex       :py:class:`numpy.complex128`
-        str           :py:class:`numpy.str_`
-        bytes         :py:class:`numpy.string_`
-        ============  ============================
 
         At the end, the end of applying the values, the validity of
         everything is checked (see :py:func:`check_values`). This is
@@ -565,10 +522,6 @@ class SettingsIO(object):
             Whether to write the values to ``settings`` or not if the
             resulting ``settings`` would be made invalid. The default is
             ``False``.
-        convert_from_numpy : bool, optional
-            Whether to convert :py:mod:`numpy` types to their equivalent
-            Python builtin types or not. Default, ``False``, is no
-            conversion. See the table for conversions.
 
         Returns
         -------
@@ -592,7 +545,7 @@ class SettingsIO(object):
 
         settings_copy = copy.deepcopy(self._settings)
         settings_copy = self._set_values_node(settings_copy, values, \
-                    force=True, convert_from_numpy=convert_from_numpy)
+                    force=True)
 
         # Check the validity of the copy.
         invalids = self._find_invalids_node(settings_copy)
@@ -607,8 +560,7 @@ class SettingsIO(object):
 
         if validity or force:
             self._settings = self._set_values_node(self._settings, \
-                values, force=True, \
-                convert_from_numpy=convert_from_numpy)
+                values, force=True)
 
         # Return the validity.
 
@@ -1114,33 +1066,14 @@ class SettingsIO(object):
                                + node['path']
                                + '.')
 
-    def _extract_values_node(self, node, convert_to_numpy=False):
+    def _extract_values_node(self, node):
         """ Returns a node stripped down to just its values.
-
-        The data types of the individual node values can optionally
-        be converted. The conversion from Python builtin types to
-        :py:mod:`numpy` types follows this table
-
-        ============  ============================
-        builtin type  Numpy type
-        ============  ============================
-        bool          :py:class:`numpy.bool_`
-        int           :py:class:`numpy.int64`
-        float         :py:class:`numpy.float64`
-        complex       :py:class:`numpy.complex128`
-        str           :py:class:`numpy.str_`
-        bytes         :py:class:`numpy.string_`
-        ============  ============================
 
         Parameters
         ----------
         node : dict of settings nodes
             `dict` of settings nodes. Must be a parent, but can contain
             parent and children nodes.
-        convert_to_numpy : bool, optional
-            Whether to convert Python built in types to their equivalent
-            :py:mod:`numpy` types or not. Default, ``False``, is no
-            conversion. See the table for conversions.
 
         Returns
         -------
@@ -1167,40 +1100,14 @@ class SettingsIO(object):
             # If it is a parent node, then recurse one level deeper. If
             # it is instead a value node, extract the value.
             if 'is_parent' in v and v['is_parent']:
-                vals[k] = self._extract_values_node(v, convert_to_numpy)
+                vals[k] = self._extract_values_node(v)
             else:
-                # If we are doing numpy conversion, the exact type
-                # determines the function needed to do the conversion.
-                if convert_to_numpy:
-                    if isinstance(v['value'], str):
-                        vals[k] = np.unicode_(v['value'])
-                    elif isinstance(v['value'], bytes):
-                        vals[k] = np.string_(v['value'])
-                    else:
-                        vals[k] = np.array(v['value'])[()]
-                else:
-                    vals[k] = v['value']
+                vals[k] = v['value']
 
         return vals
 
-    def _set_values_node(self, node, values, force=False,
-                         convert_from_numpy=False):
+    def _set_values_node(self, node, values, force=False):
         """ Apply a set of values to a settings node.
-
-        The data types of the individual settings values can optionally
-        be converted. The conversion from :py:mod:`numpy` types to
-        Python builtin types follows this table
-
-        ============  ============================
-        builtin type  Numpy type
-        ============  ============================
-        bool          :py:class:`numpy.bool_`
-        int           :py:class:`numpy.int64`
-        float         :py:class:`numpy.float64`
-        complex       :py:class:`numpy.complex128`
-        str           :py:class:`numpy.str_`
-        bytes         :py:class:`numpy.string_`
-        ============  ============================
 
         Parameters
         ----------
@@ -1218,10 +1125,6 @@ class SettingsIO(object):
             Whether to write the values to ``settings`` or not if the
             resulting ``settings`` would be made invalid. The default is
             ``False``. Basically, it bypasses the validator.
-        convert_from_numpy : bool, optional
-            Whether to convert :py:mod:`numpy` types to their equivalent
-            Python builtin types or not. Default, ``False``, is no
-            conversion. See the table for conversions.
 
         Notes
         -----
@@ -1248,36 +1151,9 @@ class SettingsIO(object):
             if 'is_parent' in sv and sv['is_parent']:
                 if isinstance(values[k], dict):
                     sv = self._set_values_node(sv, \
-                        values[k], force=force, \
-                        convert_from_numpy=convert_from_numpy)
+                        values[k], force=force)
             else:
-
-                # If there is no conversion or it is already a non-numpy
-                # type, there is nothing to do. Otherwise, a type
-                # specific (gotten from the dtype.kind field) needs to
-                # be done.
-
-                if not convert_from_numpy or isinstance(values[k], \
-                        (bool, int, float, complex, str, bytes)):
-                    val = values[k]
-                else:
-                    kind = values[k].dtype.kind
-                    if kind == 'b':
-                        val = bool(values[k])
-                    elif kind in ('i', 'u'):
-                        val = int(values[k])
-                    elif kind == 'f':
-                        val = float(values[k])
-                    elif kind == 'c':
-                        val = complex(values[k])
-                    elif kind in ('S', 'a'):
-                        val = values[k].tostring()
-                    elif kind == 'U':
-                        # Convert to UTF-8
-                        val = values[k].encode().decode()
-                    else:
-                        # Unrecognized type.
-                        continue
+                val = values[k]
 
                 # If force=True, we just apply the value. Otherwise, run
                 # the validator on the new value and set it if it is
