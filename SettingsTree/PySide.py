@@ -62,8 +62,8 @@ class QSettingsEditor(QtGui.QWidget):
 
     See Also
     --------
-    SettingsIO
-    SettingsIO.settings
+    SettingsTree
+    SettingsTree.SettingsIO
 
     Notes
     -----
@@ -397,7 +397,7 @@ class QSettingsEditor(QtGui.QWidget):
 
         See Also
         --------
-        SettingsIO.settings
+        SettingsTree.SettingsIO
 
         """
         return copy.deepcopy(self._settings)
