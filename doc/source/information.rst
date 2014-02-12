@@ -1,0 +1,5 @@
+============
+SettingsTree
+============
+
+.. include:: ../../README.rst
