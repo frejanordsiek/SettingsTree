@@ -26,11 +26,11 @@
 
 """ Module for reading/writing/displaying/editing settings trees.
 
-Version 0.1
+Version 0.2
 
 """
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 import copy
 import posixpath
