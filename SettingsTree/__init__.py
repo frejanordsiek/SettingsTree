@@ -650,6 +650,32 @@ class SettingsIO(object):
 
         return (different, in_self_only, in_sio_only)
 
+    def __getitem__(self, path):
+        """ Alias to ``get_setting_by_path``.
+
+        Alias giving dictionary like access to this object.
+
+        See Also
+        --------
+        get_setting_by_path
+
+        """
+        return self.get_setting_by_path(path)
+
+    def __setitem__(self, path, value):
+        """ Alias to ``set_settings_by_path``.
+
+        Alias giving dictionary like set access to this object. Calls
+        ``set_settigns_by_path`` with ``force=False` so that the
+        settings tree can't be made invalid by setting this value.
+
+        See Also
+        --------
+        set_settings_by_path
+        
+        """
+        return self.set_setting_by_path(path, value, force=False)
+
     def _set_paths(self, node, rootpath):
         """ Sets the 'path' field for all settings in a node.
 
