@@ -297,21 +297,23 @@ class SettingsIO(object):
     def get_setting_by_path(self, path):
         """ Grab a setting by path.
 
-        Gets a setting (value or node depending) by a POSIX style path.
+        Gets a setting by a POSIX style path.
 
         Parameters
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of ``settings``. If a path ends in a ``'/'``, the setting
-            node is retrieved regardless of whether it is a parent or
-            not. If it doesn't end in a ``'/'`` and it is not a parent,
-            the value of the setting is retrieved.
+            of `node`. If a path ends in a ``'/'``, the setting node is
+            retrieved regardless of whether it is a parent or not. If it
+            doesn't end in a ``'/'``, the value is returned if it is not
+            a parent, or a ``list`` of the children names if it is a
+            parent.
 
         Returns
         -------
-        node or value
-            The setting node (or its value if it is not a parent and
+        node or value or list of str
+            The setting node (or its value for a non-parent  or a
+            ``list`` of the names of its children for a parent
             `path` didn't end in ``'/'``) pointed to by `path`.
 
         Raises
@@ -344,10 +346,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of ``settings``. If a path ends in a ``'/'``, the setting
-            node is retrieved regardless of whether it is a parent or
-            not. If it doesn't end in a ``'/'`` and it is not a parent,
-            the value of the setting is retrieved.
+            of ``settings``.
         force : bool, optional
             Whether to write the value to the setting or not if the
             resulting ``settings`` would be made invalid.
@@ -696,13 +695,15 @@ class SettingsIO(object):
             POSIX style path to the desired setting. ``'/'`` is the root
             of `node`. If a path ends in a ``'/'``, the setting node is
             retrieved regardless of whether it is a parent or not. If it
-            doesn't end in a ``'/'`` and it is not a parent, the value
-            of the setting is retrieved.
+            doesn't end in a ``'/'``, the value is returned if it is not
+            a parent, or a ``list`` of the children names if it is a
+            parent.
 
         Returns
         -------
-        node or value
-            The setting node (or its value if it is not a parent and
+        node or value or list of str
+            The setting node (or its value for a non-parent  or a
+            ``list`` of the names of its children for a parent
             `path` didn't end in ``'/'``) pointed to by `path`.
 
         Raises
@@ -747,7 +748,7 @@ class SettingsIO(object):
             # setting that is wanted. If it is not in the node's
             # children, then we must throw an error. If it is an actual
             # setting, the value is returned. If it is a parent, then
-            # that node is returned.
+            # a list of its children is returned.
             if spath not in node['children']:
                 raise KeyError('Couldn''t find '
                                + spath
@@ -757,7 +758,7 @@ class SettingsIO(object):
             elif 'value' in node['children'][spath]:
                 return node['children'][spath]['value']
             else:
-                return node['children'][spath]
+                return list(node['children'][spath]['children'].keys())
         elif index == len(spath) - 1:
             # The separator is at the very end, meaning that the actual
             # node is desired regardless of whether it is a parent or
