@@ -37,7 +37,7 @@ import posixpath
 import itertools
 
 
-class SettingsIO(object):
+class Tree(object):
     """ Object to work with a tree of settings.
 
     An object to maintain a tree of settings, extract its values
@@ -46,21 +46,21 @@ class SettingsIO(object):
     (:py:func:`check_values`), and read/write them from/to disk in JSON
     format.
 
-    The validity of the optional supplied `settings` is not checked.
+    The validity of the optional supplied `tree` is not checked.
 
     Parameters
     ----------
-    settings : dict, optional
+    tree : dict, optional
         See Notes for format. Give ``None`` to get an empty
         parent. Note, it is not deep copied.
 
     Attributes
     ----------
-    settings
+    tree
 
     Notes
     -----
-    `settings` is a ``dict`` representing the various settings to be
+    `tree` is a ``dict`` representing the various settings to be
     read/written. Each element is a ``dict`` itself with a specific set
     of keys. If the element is a parent of other elements, a key
     named 'children' which contains a ``dict`` of all its children. If
@@ -69,37 +69,37 @@ class SettingsIO(object):
     holds the current value of the setting. 'validator' is a validation
     function that is called like  ``valid = validator(value, settings,
     child)`` which gives ``True`` if `value` is valid and ``False``
-    otherwise given `settings` (it might depend on other settings) and
+    otherwise given `tree` (it might depend on other settings) and
     the element of this particular setting (`child`). An element for a
     setting must not have a key named 'children'. The root node
-    (`settings` itself) must be a parent node.
+    (`tree` itself) must be a parent node.
 
     Recursion is used very heavily in this class for all operations, so
-    `settings` should not be nested too deep.
+    `tree` should not be nested too deep.
 
     """
-    def __init__(self, settings=None):
-        if isinstance(settings, dict):
-            self._settings = settings
+    def __init__(self, tree=None):
+        if isinstance(tree, dict):
+            self._tree = tree
         else:
-            self._settings = {'children': dict()}
+            self._tree = {'children': dict()}
 
         # Go through each node and set the 'path' field.
-        self._settings['path'] = posixpath.sep
-        self._set_paths(self._settings, posixpath.sep)
+        self._tree['path'] = posixpath.sep
+        self._set_paths(self._tree, posixpath.sep)
 
     @property
-    def settings(self):
+    def tree(self):
         """ Representation of the different settings.
 
-        `settings` is a ``dict`` representing the various settings to be
+        `tree` is a ``dict`` representing the various settings to be
         managed. See Notes for its format.
 
         Getting it just gets the reference as opposed to deep copying.
 
         Setting it extracts the values from what it is being set to and
         then applies them (see :py:func:`extract_values` and
-        :py:func:`set_values`), as opposed to replacing `settings`.
+        :py:func:`set_values`), as opposed to replacing `tree`.
 
         Notes
         -----
@@ -112,25 +112,25 @@ class SettingsIO(object):
         of the setting. 'validator' is a validation function that is
         called like ``valid = validator(value, settings, child)`` which
         gives ``True`` if `value` is valid and ``False`` otherwise given
-        `settings` (it might depend on other settings) and the element
+        `tree` (it might depend on other settings) and the element
         of this particular setting (`child`). An element for a setting
-        must not have a key named 'children'. The root node (`settings`
+        must not have a key named 'children'. The root node (`tree`
         itself) must be a parent node.
 
         """
-        return self._settings
+        return self._tree
 
-    @settings.setter
-    def settings(self, settings2):
-        # Extract the values from the given settings2 and then apply
+    @tree.setter
+    def tree(self, tree2):
+        # Extract the values from the given tree2 and then apply
         # them.
-        self.set_values(self._extract_values_node(settings2),
+        self.set_values(self._extract_values_node(tree2),
                         force=False)
 
     def find_invalids(self, path=posixpath.sep):
         """ Returns the paths of the invalid settings under a path.
 
-        Goes through each subnode of of the node of ``settings``
+        Goes through each subnode of of the node of ``tree``
         specified by the POSIX style path and checks whether it
         is valid or not. A list of the paths to the invalid ones is
         returned.
@@ -139,7 +139,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of ``settings``.
+            of ``tree``.
 
         Returns
         -------
@@ -168,7 +168,7 @@ class SettingsIO(object):
     def check_values(self, path=posixpath.sep):
         """ Returns whether the setting values under a path are valid.
 
-        Goes through each node of ``settings`` under `path` (POSIX
+        Goes through each node of ``tree`` under `path` (POSIX
         style) and checks whether it is valid or not. It is only
         considered valid if every node is valid (right keys, values that
         are valid, etc.).
@@ -177,7 +177,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of ``settings``.
+            of ``tree``.
 
         Returns
         -------
@@ -208,7 +208,7 @@ class SettingsIO(object):
         Returns
         -------
         dict
-            A ``dict`` with an element for each node in ``settings``.
+            A ``dict`` with an element for each node in ``tree``.
             Parent nodes get turned into a ``dict`` with all their
             children nodes as elements. Setting nodes get reduced to
             being just their value (``name: value``).
@@ -220,7 +220,7 @@ class SettingsIO(object):
         exhausted.
 
         """
-        return self._extract_values_node(self._settings)
+        return self._extract_values_node(self._tree)
 
     def set_values(self, values, force=False):
         """ Apply a set of values to the settings.
@@ -232,29 +232,29 @@ class SettingsIO(object):
         setting can make other ones invalid, which can only be seen at
         the end. If `force` is ``True``, then the new values are applied
         regardless of validity. If it is ``False``, they are not applied
-        if the resulting ``settings`` would be invalid. The validity of
-        the ``settings`` that would result from applying `values` is
-        returned, regardless of whether ``settings`` is actually changed
+        if the resulting ``tree`` would be invalid. The validity of
+        the ``tree`` that would result from applying `values` is
+        returned, regardless of whether ``tree`` is actually changed
         or not.
 
         Parameters
         ----------
         values : dict
             A ``dict`` holding the setting value for each node in
-            ``settings``. For a setting node, the element in `values` is
-            just ``key: value``. For parent nodes in ``settings``, the
+            ``tree``. For a setting node, the element in `values` is
+            just ``key: value``. For parent nodes in ``tree``, the
             element is a ``dict`` of all the children, which are then
             formatted the same way. Basically, this is the same format
             as the output of :py:meth:`extract_values`
         force : bool, optional
-            Whether to write the values to ``settings`` or not if the
-            resulting ``settings`` would be made invalid. The default is
+            Whether to write the values to ``tree`` or not if the
+            resulting ``tree`` would be made invalid. The default is
             ``False``.
 
         Returns
         -------
         bool
-            Whether the ``settings`` that would result from applying
+            Whether the ``tree`` that would result from applying
             `values` is valid (``True``) or not (``False``)
 
         Notes
@@ -264,30 +264,30 @@ class SettingsIO(object):
         exhausted.
 
         """
-        # Apply the values to a copy of settings so that it isn't
+        # Apply the values to a copy of tree so that it isn't
         # overwritten yet. Even if force is False, we will still force
         # write on the copy and just check the validity of everything at
         # the end (its possible to change one setting and then the
         # change of another makes it valid again if there are
         # dependencies).
 
-        settings_copy = copy.deepcopy(self._settings)
-        settings_copy = self._set_values_node(settings_copy, values, \
+        tree_copy = copy.deepcopy(self._tree)
+        tree_copy = self._set_values_node(tree_copy, values, \
                     force=True)
 
         # Check the validity of the copy.
-        invalids = self._find_invalids_node(settings_copy)
+        invalids = self._find_invalids_node(tree_copy)
         validity = (0 == len(invalids))
 
-        # If it is valid or we are force writing, overwrite settings. It
+        # If it is valid or we are force writing, overwrite tree. It
         # is done by using _set_values_node rather than just setting
-        # _settings to settings_copy, because the former means that the
-        # _settings object get overwritten and any external references
-        # to it are broken (settings_copy is a deep copy, so it has a
+        # _tree to tree_copy, because the former means that the
+        # _tree object get overwritten and any external references
+        # to it are broken (tree_copy is a deep copy, so it has a
         # different reference chain).
 
         if validity or force:
-            self._settings = self._set_values_node(self._settings, \
+            self._tree = self._set_values_node(self._tree, \
                 values, force=True)
 
         # Return the validity.
@@ -332,13 +332,13 @@ class SettingsIO(object):
         set_setting_by_path
 
         """
-        return self._get_setting_by_path_node(self._settings, path)
+        return self._get_setting_by_path_node(self._tree, path)
 
     def set_setting_by_path(self, path, value, force=False):
         """ Set a setting by path.
 
         Sets a setting (value or node depending) by a POSIX style
-        path. The validity of the resulting ``settings`` is
+        path. The validity of the resulting ``tree`` is
         returned. Unless `value` is being forced (``force = True``), the
         old value is restored.
 
@@ -346,15 +346,15 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of ``settings``.
+            of ``tree``.
         force : bool, optional
             Whether to write the value to the setting or not if the
-            resulting ``settings`` would be made invalid.
+            resulting ``tree`` would be made invalid.
 
         Returns
         -------
         bool
-            Whether the ``settings`` that would result from applying
+            Whether the ``tree`` that would result from applying
             `value` is valid (``True``) or not (``False``).
 
         Raises
@@ -390,7 +390,7 @@ class SettingsIO(object):
             raise KeyError(path + ' is not a setting.')
 
         # Grab the old value, just in case setting it to the new one
-        # makes settings invalid.
+        # makes tree invalid.
         old_value = node['value']
 
         # Set the new value, and check validity (which will be
@@ -414,7 +414,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting to list the children
-            of. ``'/'`` is the root of ``settings``.
+            of. ``'/'`` is the root of ``tree``.
 
         Returns
         -------
@@ -458,7 +458,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting to list the children
-            of. ``'/'`` is the root of ``settings``.
+            of. ``'/'`` is the root of ``tree``.
         tp : {'all', 'parent', 'setting', 'neither'}, optional
             What kind of settings to return: parents, settings, or both
             ('all'). 'neither' is a special value for things that are
@@ -515,7 +515,7 @@ class SettingsIO(object):
         ----------
         path : str
             POSIX style path to the desired setting to list the children
-            of. ``'/'`` is the root of ``settings``.
+            of. ``'/'`` is the root of ``tree``.
 
         Returns
         -------
@@ -555,7 +555,7 @@ class SettingsIO(object):
         else:
             return 'neither'
 
-    def diff(self, settings_or_SettingsIO):
+    def diff(self, tree_or_Tree):
         """ Find locations of differences between two settings trees.
 
         Compares the individual settings between this settings tree and
@@ -568,10 +568,10 @@ class SettingsIO(object):
 
         Parameters
         ----------
-        settings_or_SettingsIO : dict of settings or SettingsIO
+        tree_or_Tree : dict of settings or Tree
             The settings tree to compare to. Must either be a
-            ``SettingsIO`` or a ``dict`` of settings that a
-            ``SettingsIO`` can be constructed from.
+            ``Tree`` or a ``dict`` of settings that a
+            ``Tree`` can be constructed from.
 
         Returns
         -------
@@ -598,33 +598,33 @@ class SettingsIO(object):
         setting 'd'. Then they are compared.
 
         >>> import copy
-        >>> settings1 = {'children': {
+        >>> tree1 = {'children': {
                          'a':{'value': 2}, 'b':{'value': 10.2},
                          'c':{'value': 'foo'}}}
-        >>> settings2 = copy.deepcopy(settings1)
-        >>> del settings2['children']['b']
-        >>> settings2['children']['c']['value'] = 'bar'
-        >>> settings2['children']['d'] = {'value': 42}
-        >>> settings1
+        >>> tree2 = copy.deepcopy(tree1)
+        >>> del tree2['children']['b']
+        >>> tree2['children']['c']['value'] = 'bar'
+        >>> tree2['children']['d'] = {'value': 42}
+        >>> tree1
         {'children': {'a': {'value': 2},
           'b': {'value': 10.2},
           'c': {'value': 'foo'}}}
-        >>> settings2
+        >>> tree2
         {'children': {'a': {'value': 2},
           'c': {'value': 'bar'},
           'd': {'value': 42}}}
-        >>> sio = SettingsIO(settings1)
-        >>> sio2 = SettingsIO(settings2)
+        >>> sio = Tree(tree1)
+        >>> sio2 = Tree(tree2)
         >>> sio1.diff(sio2)
         (['/c'], ['/b'], ['/d'])
 
         """
-        # If we are given a SettingsIO, all is good. Otherwise we were
-        # given a settings, so we need to make a SettingsIO from it.
-        if isinstance(settings_or_SettingsIO, SettingsIO):
-            sio = settings_or_SettingsIO
+        # If we are given a Tree, all is good. Otherwise we were
+        # given a tree, so we need to make a Tree from it.
+        if isinstance(tree_or_Tree, Tree):
+            sio = tree_or_Tree
         else:
-            sio = SettingsIO(settings_or_SettingsIO)
+            sio = Tree(tree_or_Tree)
 
         # Get the lists of all setting type children of both, which we
         # will need to compare them with, and pack them into sets (makes
@@ -663,7 +663,7 @@ class SettingsIO(object):
         return self.get_setting_by_path(path)
 
     def __setitem__(self, path, value):
-        """ Alias to ``set_settings_by_path``.
+        """ Alias to ``set_tree_by_path``.
 
         Alias giving dictionary like set access to this object. Calls
         ``set_settigns_by_path`` with ``force=False` so that the
@@ -671,7 +671,7 @@ class SettingsIO(object):
 
         See Also
         --------
-        set_settings_by_path
+        set_tree_by_path
         
         """
         return self.set_setting_by_path(path, value, force=False)
@@ -867,14 +867,14 @@ class SettingsIO(object):
             parent and children nodes.
         values : dict
             A ``dict`` holding the setting value for each node in
-            ``settings``. For a setting node, the element in `values` is
-            just ``key: value``. For parent nodes in ``settings``, the
+            ``tree``. For a setting node, the element in `values` is
+            just ``key: value``. For parent nodes in ``tree``, the
             element is a ``dict`` of all the children, which are then
             formatted the same way. Basically, this is the same format
             as the output of :py:meth:`extract_values`
         force : bool, optional
-            Whether to write the values to ``settings`` or not if the
-            resulting ``settings`` would be made invalid. The default is
+            Whether to write the values to ``tree`` or not if the
+            resulting ``tree`` would be made invalid. The default is
             ``False``. Basically, it bypasses the validator.
 
         Notes
@@ -897,7 +897,7 @@ class SettingsIO(object):
             # If it is a parent node, then recurse one level deeper. If
             # it is a value node, the value needs to be extracted,
             # possibly converted from its numpy type, and then passed
-            # through the validator before being put into settings.
+            # through the validator before being put into tree.
 
             if 'children' in sv:
                 if isinstance(values[k], dict):
@@ -910,7 +910,7 @@ class SettingsIO(object):
                 # the validator on the new value and set it if it is
                 # valid.
 
-                if force or sv['validator'](val, self._settings, sv):
+                if force or sv['validator'](val, self._tree, sv):
                     sv['value'] = val
 
         return node
@@ -985,7 +985,7 @@ class SettingsIO(object):
             # Run the value through the validator, and return if path if
             # invalid or if an exceptiong occurs.
             try:
-                if not node['validator'](node['value'], self._settings,
+                if not node['validator'](node['value'], self._tree,
                                          node):
                     return [node['path']]
             except:

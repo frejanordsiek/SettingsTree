@@ -31,7 +31,7 @@ import copy
 import posixpath
 
 from PySide import QtCore, QtGui
-from SettingsTree import SettingsIO
+from SettingsTree import Tree
 
 
 class QSettingsEditor(QtGui.QWidget):
@@ -45,29 +45,29 @@ class QSettingsEditor(QtGui.QWidget):
     at the top is unset). Invalid ones are not applied and the
     control for that setting is restored to the current valid value (it
     is assumed that the settings are all initially valid). If a change
-    is made which is valid, the signal ``settingsChanged`` is
-    emitted. The tree of settings is given as 'settings' and can be
-    accessed by the attribute ``settings``.
+    is made which is valid, the signal ``treeChanged`` is
+    emitted. The tree of settings is given as 'tree' and can be
+    accessed by the attribute ``tree``.
 
     Parameters
     ----------
-    settings : settings dict
+    tree : tree dict
         ``dict`` representing the various settings to be managed. The
         format is discussed in the notes.
 
     Attributes
     ----------
-    settings : dict
-    settingsChanged : QtCore.Signal
+    tree : dict
+    treeChanged : QtCore.Signal
 
     See Also
     --------
     SettingsTree
-    SettingsTree.SettingsIO
+    SettingsTree.Tree
 
     Notes
     -----
-    Most of the format is described in ``SettingsIO``. This control does
+    Most of the format is described in ``Tree``. This control does
     use a couple additional fields. Each node (whether it is a parent or
     a node) must have a field 'name' which gives the text to display for
     that setting or parent of settings. Each node also needs a field
@@ -81,8 +81,8 @@ class QSettingsEditor(QtGui.QWidget):
     """
 
     #: Signal emitted when the settings have been changed.
-    settingsChanged = QtCore.Signal()
-    """ Signal emitted when settings has been changed and is valid.
+    treeChanged = QtCore.Signal()
+    """ Signal emitted when tree has been changed and is valid.
 
     Whenever the settings are changed and the resulting settings are all
     valid, the signal is emitted. Changes resulting in invalid changes
@@ -90,7 +90,7 @@ class QSettingsEditor(QtGui.QWidget):
 
     """
 
-    def __init__(self, settings):
+    def __init__(self, tree):
         QtGui.QWidget.__init__(self)
 
         # Create the widget. It is going to be a checkbox for whether
@@ -109,21 +109,21 @@ class QSettingsEditor(QtGui.QWidget):
         self._toolbox = QtGui.QToolBox()
         vbox.addWidget(self._toolbox)
 
-        # Store the settings (deep copy) and then make a SettingsIO for
+        # Store the tree (deep copy) and then make a Tree for
         # it.
 
-        self._settings = copy.deepcopy(settings)
-        self._sio = SettingsIO(self._settings)
+        self._tree = copy.deepcopy(tree)
+        self._Tree = Tree(self._tree)
 
         # Get the list of all settings nodes and pack them as keys in a
         # dictionary that will hold controls and other information for
         # them.
 
-        self._all_settings = {x:dict() for x in self._sio.list_all()}
+        self._all_settings = {x:dict() for x in self._Tree.list_all()}
 
         # Create the controls to do the editting and displaying.
 
-        self._create_display_node(self._settings,
+        self._create_display_node(self._tree,
                                   self._toolbox)
 
         # Find the invalid settings and adjust their text.
@@ -268,14 +268,14 @@ class QSettingsEditor(QtGui.QWidget):
         settings. This included reading the new setting value,
         validating the changed settings, restoring the old one if it is
         invalid if validation is required, and emitting the
-        ``settingsChanged`` signal if it is valid.
+        ``treeChanged`` signal if it is valid.
 
         """
         # The control that triggered the signal needs to be gotten, and
         # then the settings node that it is associated with.
 
         control = self.sender()
-        node = self._sio.get_setting_by_path(control.settings_path
+        node = self._Tree.get_setting_by_path(control.settings_path
                                              + posixpath.sep)
 
         # Start with the change being considered invalid, so that if an
@@ -321,22 +321,22 @@ class QSettingsEditor(QtGui.QWidget):
                                           + str(type(node['value'])))
 
             # Apply the new value to node and then check the validity of
-            # the whole _settings. The original value will be copied
+            # the whole _tree. The original value will be copied
             # back to it in the case that it is invalid.
 
             node['value'] = newvalue
-            valid = self._sio.check_values()
+            valid = self._Tree.check_values()
         except:
             # It is obviously invalid.
             valid = False
 
-        # If it is valid, the settingsChanged signal needs to be
+        # If it is valid, the treeChanged signal needs to be
         # emitted. If it is invalid, the old value must be restored and
         # the control needs to be set back to the old value. The signals
         # need to be temporarily turned off while this is done.
 
         if valid:
-            self.settingsChanged.emit()
+            self.treeChanged.emit()
         elif self._validation_checkbox.isChecked():
             node['value'] = oldvalue
 
@@ -373,13 +373,13 @@ class QSettingsEditor(QtGui.QWidget):
         for path, v in self._all_settings.items():
             # Adjust the text based on its validity.
             if v['type'] == 'parent':
-                if self._sio.check_values(path):
+                if self._Tree.check_values(path):
                     txt = v['name']
                 else:
                     txt = '!!! ' + v['name'] + ' !!!'
                 v['toolbox'].setItemText(v['item'], txt)
             else:
-                if self._sio.check_values(path):
+                if self._Tree.check_values(path):
                     txt = v['name']
                 else:
                     txt = '<b><font color=#FF0000>' \
@@ -388,19 +388,19 @@ class QSettingsEditor(QtGui.QWidget):
                 v['label'].setText(txt)
 
     @property
-    def settings(self):
+    def tree(self):
         """ Representation of the different settings.
 
-        `settings` is a ``dict`` representing the various settings to be
-        managed. The format is described in ``SettingsIO`` other than a
+        `tree` is a ``dict`` representing the various settings to be
+        managed. The format is described in ``Tree`` other than a
         couple additional fields are used.
 
         See Also
         --------
-        SettingsTree.SettingsIO
+        SettingsTree.Tree
 
         """
-        return copy.deepcopy(self._settings)
+        return copy.deepcopy(self._tree)
 
     @property
     def all_valid(self):
@@ -409,4 +409,4 @@ class QSettingsEditor(QtGui.QWidget):
         bool
 
         """
-        return self._sio.check_values()
+        return self._Tree.check_values()
