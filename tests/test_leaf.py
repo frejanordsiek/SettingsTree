@@ -29,6 +29,7 @@
 import copy
 import math
 import random
+import string
 import collections
 import unittest
 
@@ -38,6 +39,19 @@ from SettingsTree import Leaf
 
 
 random.seed()
+
+
+# A of random set of parameters to use.
+rand_params = dict()
+
+
+def setup_module():
+    rand_params = dict()
+    ltrs = string.ascii_letters + string.digits
+    for i in range(random.randint(5, 10)):
+        k = ''.join([random.choice(ltrs) for j in range(0, 20)])
+        v = random.random()
+        rand_params[k] = v
 
 
 # Test initializing a blank one.
@@ -285,3 +299,65 @@ def test_set_validator_function_invalid_wrongnumberargs():
     leaf = Leaf()
     x = lambda y, z, w: True
     leaf.validator_function = x
+
+
+# Do tests on the Leaf's extra parameters abilities.
+
+def test_extra_parameters_contains():
+    leaf = Leaf(blah='3a', nd=4.2)
+    assert 'blah' in leaf
+    assert 'nd' in leaf
+    assert 'somethingelse' not in leaf
+
+
+def test_extra_parameters_get():
+    leaf = Leaf(blah='3a', nd=4.2)
+    assert '3a' == leaf['blah']
+    assert 4.2 == leaf['nd']
+
+
+def test_extra_parameters_set():
+    leaf = Leaf()
+    param = ('adfjadfka', 3934)
+    leaf[param[0]] = param[1]
+    assert param[0] in leaf
+    assert param[1] == leaf[param[0]]
+
+
+def test_extra_parameters_del():
+    param = {'adfjadfka': 3934}
+    leaf = Leaf(**param)
+    assert list(param.keys())[0] in leaf
+    del leaf[list(param.keys())[0]]
+    assert list(param.keys())[0] not in leaf
+
+
+def test_extra_parameters_len():
+    leaf = Leaf(**rand_params)
+    assert len(rand_params) == len(leaf)
+
+
+def test_extra_parameters_values():
+    leaf = Leaf(**rand_params)
+    assert len(rand_params) == len(leaf)
+    for k, v in rand_params.items():
+        assert k in leaf
+        assert v == leaf[k]
+
+
+def test_extra_parameters_iteration():
+    leaf = Leaf(**rand_params)
+    assert len(rand_params) == len(leaf)
+    for k in leaf:
+        assert k in rand_params
+        assert leaf[k] == rand_params[k]
+
+
+def test_extra_parameters_keys():
+    leaf = Leaf(**rand_params)
+    assert set(rand_params.keys()) == set(leaf.keys())
+
+
+def test_extra_parameters_items():
+    leaf = Leaf(**rand_params)
+    assert set(rand_params.items()) == set(leaf.items())
