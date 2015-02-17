@@ -353,10 +353,12 @@ class Leaf(object):
     def validator_function(self, value2):
         if value2 is None:
             self._validator_function = None
-        elif inspect.isfunction(value2):
+        elif inspect.isfunction(value2) \
+                and 2 == len(inspect.getargspec(value2).args):
             self._validator_function = copy.deepcopy(value2)
         else:
-            raise TypeError('Must be set to a function or None.')
+            raise TypeError('Must be set to a function taking 2 '
+                            'arguments or None.')
 
     def available_validators(self):
         """ Returns the available validators and number of parameters.
