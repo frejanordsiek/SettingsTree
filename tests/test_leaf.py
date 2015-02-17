@@ -57,7 +57,9 @@ def test_fully_initialized_leaf():
 # Test setting the value.
 def test_set_value():
     leaf = Leaf()
-    leaf.value = random.random()
+    x = random.random()
+    leaf.value = x
+    assert x == leaf.value
 
 
 # Test all correct ways to set valid_value_types and a few incorrect
