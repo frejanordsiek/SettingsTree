@@ -35,4 +35,6 @@ setup(name='SettingsTree',
           "Topic :: Software Development :: User Interfaces",
           "Topic :: Software Development :: Widget Sets",
           ],
+      test_suite='nose.collector',
+      tests_require='nose>=1.0'
       )
