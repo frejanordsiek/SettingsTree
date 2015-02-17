@@ -423,7 +423,7 @@ class Leaf(object):
         # Check that it is one of the allowed types, is an allowed
         # value, and is not a forbidden value.
         if self._valid_value_types is not None \
-                and self._value not in self._valid_value_types:
+                and type(self._value) not in self._valid_value_types:
             return False
         if self._allowed_values is not None \
                 and self._value not in self._allowed_values:
