@@ -265,7 +265,7 @@ def test_undo_validator_function():
 
 def test_set_validator_function():
     leaf = Leaf()
-    x = lambda y, z, w: True
+    x = lambda y, z: True
     leaf.validator_function = x
     out = leaf.validator_function
     assert x == out
@@ -275,4 +275,11 @@ def test_set_validator_function():
 def test_set_validator_function_invalid_notfunction():
     leaf = Leaf()
     x = 9.2
+    leaf.validator_function = x
+
+
+@raises(TypeError)
+def test_set_validator_function_invalid_wrongnumberargs():
+    leaf = Leaf()
+    x = lambda y, z, w: True
     leaf.validator_function = x
