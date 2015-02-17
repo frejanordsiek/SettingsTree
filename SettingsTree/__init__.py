@@ -35,6 +35,462 @@ __version__ = "0.2"
 import copy
 import posixpath
 import itertools
+import collections
+import numbers
+import inspect
+
+
+class Leaf(object):
+    """ An individual setting.
+
+    A setting that is part of a nested tree of settings (see ``Tree``),
+    has a value (``value``), and possibly requires validation checks.
+
+    A setting is valid if it meets several criteria. Note, it is
+    possible to set the criteria such that it can never be valid with
+    any value. It is valid (call ``is_valid``) if it meets all the
+    following criteria.
+
+    1. It's type is one of the types contained in ``valid_value_types``,
+       if given.
+    2. It is one of the values in ``allowed_values``, if given.
+    3. It is not one of the values in ``forbidden_values``, if given.
+    4. It passes all the simple validators in ``validators``, if given.
+       See ``available_validators`` for the available ones and how to
+       set their parameters. More than one can be used in combination.
+       They are meant for numerical settings to make sure they are
+       less than a value, greater than, in a range, outside a range,
+       etc.
+    5. It passes the custom validation function provided
+       (``validator_function``), if given. It must be a function
+       (includes those made by ``lambda``). It must return a ``bool``
+       indicating whether the setting is valid (``True``) or not
+       (``False``) and take two arguments. The first is the value of
+       this setting and the second is a ``dict`` containing all the
+       other settings in the root settings ``Tree`` that this is a part
+       of with the POSIX paths to the individual setting leaves as the
+       keys and their values as the values. Thowing an exception, which
+       will be caught, is considered as the setting being invalid.
+
+    Additional parameters can be stored in this ``Leaf`` and accessed
+    like a ``dict``. The initial ones are set by `**keywords`, but then
+    can be set and gotten by the usual ways of working with a ``dict``
+    such as ``leaf['a']``.
+
+    Parameters
+    ----------
+    value : any, optional
+        The value of this setting. See Attributes.
+    valid_value_types : type, iterable of types, optional
+        See Attributes.
+    allowed_values : iterable, optional
+        See Attributes.
+    forbidden_values : iterable, optional
+        See Attributes.
+    validators : iterable of iterables, optional
+        See Attributes.
+    validator_function : function, optional
+        See Attributes.
+    **keywords : optional
+        Aditional keyword arguments which are put in this ``Leaf`` to
+        be accessed by accessing this ``Leaf`` like a ``dict``.
+
+    Attributes
+    ----------
+    value : any type
+    valid_value_types : iterable of classes or None
+    allowed_values : iterable or None
+    forbidden_values : iterable or None
+    validators : iterable of iterables or None
+    validator_function : function or None
+
+    See Also
+    --------
+    Tree
+    available_validators
+
+    """
+    def __init__(self, value=None, valid_value_types=None,
+                 allowed_values=None, forbidden_values=None,
+                 validators=None, validator_function=None,
+                 **keywords):
+        # The value is set without question.
+        self.value = value
+        
+        # For the others, the values to set need to be validated. So,
+        # they are all set to None, which is a valid value, and then one
+        # by one set to the given values.
+        self._validator_function = None
+        self._valid_value_types = None
+        self._allowed_values = None
+        self._forbidden_values = None
+        self._validators = None
+        
+        self.validator_function = validator_function
+        self.valid_value_types = valid_value_types
+        self.allowed_values = allowed_values
+        self.forbidden_values = forbidden_values
+        self.validators = validators
+
+        # Copy everything in keywords into the extra parameters
+        # dictionary.
+        self._extra_parameters = copy.deepcopy(keywords)
+
+    @property
+    def value(self):
+        """ The value of this particular setting
+
+        any type
+
+        See Also
+        --------
+        is_valid
+        
+        """
+        return copy.deepcopy(self._value)
+
+    @value.setter
+    def value(self, value2):
+        self._value = copy.deepcopy(value2)
+
+
+    @property
+    def valid_value_types(self):
+        """ The python types that the setting value must be a type of.
+
+        type, iterable of types, or None
+
+        The type/s that this setting's value must be a type of in
+        order to be valid. ``None`` is used to indicate that any type
+        is allowed. Is stored as ``None`` or a ``tuple`` of types.
+
+        Raises
+        ------
+        TypeError
+            If set to something invalid.
+
+        """
+        return copy.deepcopy(self._valid_value_types)
+    
+    @valid_value_types.setter
+    def valid_value_types(self, value2):
+        if value2 is None:
+            self._valid_value_types = None
+        elif isinstance(value2, type):
+            self._valid_value_types = (value2,)
+        elif isinstance(value2, collections.Iterable):
+            for v in value2:
+                if not isinstance(v, type):
+                    raise TypeError('An element of the iterable was not'
+                                    ' a type.')
+            self._valid_value_types = tuple(value2)
+        raise TypeError('Set to something invalid.')
+
+    
+    @property
+    def allowed_values(self):
+        """ The allowed setting values.
+
+        iterable or None
+
+        The valid values allowed for this setting. ``None`` designates
+        that this feature is not used (all values otherwise valid
+        are allowed). Stored as ``None`` or a ``tuple``.
+
+        Raises
+        ------
+        TypeError
+            If set to something invalid.
+
+        See Also
+        --------
+        forbidden_values
+        
+        """
+        return copy.deepcopy(self._allowed_values)
+
+    @allowed_values.setter
+    def allowed_values(self, value2):
+        if value2 is None:
+            self._allowed_values = None
+        elif isinstance(value2, collections.Iterable):
+            self._allowed_values = tuple(copy.deepcopy(value2))
+        else:
+            raise TypeError('Set to something invalid.')
+
+    
+    @property
+    def forbidden_values(self):
+        """ The forbidden setting values.
+
+        iterable or None
+
+        The values forbidden for this setting. ``None`` designates
+        that this feature is not used. Stored as ``None`` or a ``tuple``.
+
+        Raises
+        ------
+        TypeError
+            If set to something invalid.
+
+        See Also
+        --------
+        allowed_values
+        
+        """
+        return copy.deepcopy(self._forbidden_values)
+
+    @forbidden_values.setter
+    def forbidden_values(self, value2):
+        if value2 is None:
+            self._forbidden_values = None
+        elif isinstance(value2, collections.Iterable):
+            self._forbidden_values = tuple(copy.deepcopy(value2))
+        else:
+            raise TypeError('Set to something invalid.')
+
+
+    @property
+    def validators(self):
+        """ The simple validators to use and their parameters.
+        
+        iterable of iterables, or None
+
+        The simple validators for the setting value to use and their
+        parameters, or ``None`` to not use any. The available ones and
+        how many parameters they required can be found by calling
+        ``available_validators``. Each one must be given as a two
+        element iterable with the string name of the simple validator
+        in the first element and the parameters in the second. If it
+        takes one parameter, the second element should be that
+        parameter. If it takes two parameters, the second element
+        should be an iterable of the two parameters. The parameters
+        must inherit from ``numbers.Number``. The simple validators must
+        be given as an iterable of them, so an iterable of iterables.
+
+        Warning
+        -------
+        It is possible to set the group of simple validators such that
+        no setting is valid.
+
+        Raises
+        ------
+        TypeError
+            If set to something invalid.
+
+        See Also
+        --------
+        available_validators
+        
+        """
+        return copy.deepcopy(self._validators)
+    
+    @validators.setter
+    def validators(self, value2):
+        if value2 is None:
+            self._validators = None
+        elif not isinstance(value2, collections.Iterable):
+            raise TypeError('Must be set to an iterable of iterables.')
+        else:
+            # Check every simple validator to see if it is available
+            # and the parameters match up.
+            avail_vals, nparams = self.available_validators()
+            for v in value2:
+                if not isinstance(v, collections.Iterable) \
+                        or len(v) != 2 or v[0] not in avail_vals:
+                    raise TypeError('Each element must be a 2 element'
+                                    ' iterable with an available'
+                                    ' simple validator.')
+                # If one parameter, it must be a number. If two
+                # parameters it must be an iterable of two numbers.
+                if 1 == nparams(avail_vals.index(v[0])):
+                    if not isinstance(v[1], numbers.Number):
+                        raise TypeError('Parameter must be a Number')
+                else:
+                    if not isinstance(v[1], collections.Iterable) \
+                            or len(v[1]) != 2 \
+                            or not isinstance(v[1][0], numbers.Number) \
+                            or not isinstance(v[1][1], numbers.Number):
+                        raise TypeError('Parameters must be an '
+                                        'iterable of two Numbers')
+            # It is valid. Now assign it.
+            self._validators = tuple([(v[0], copy.deepcopy(v[1]))
+                                     for v in value2])
+
+
+    @property
+    def validator_function(self):
+        """ Custom validation function to validate the setting.
+        
+        function or None
+
+        User provided custom validator function to check the validity
+        of this setting after all other checks have been done. ``None``
+        means the feature is not used. It must be a function (includes
+        those made by ``lambda``). It must return a ``bool`` indicating
+        whether the setting is valid (``True``) or not (``False``) and
+        take two arguments. The first is the value of this setting
+        and the second is a ``dict`` containing all the other
+        settings in the root settings ``Tree`` that this is a part of
+        with the POSIX paths to the individual setting leaves as the
+        keys and their values as the values. Thowing an exception, which
+        will be caught, is considered as the setting being invalid.
+
+        Raises
+        ------
+        TypeError
+            If set to something invalid.
+
+        See Also
+        --------
+        Tree.list
+
+        """
+        return self._validator_function
+    
+    @validator_function.setter
+    def validator_function(self, value2):
+        if value2 is None:
+            self._validator_function = None
+        elif inspect.isfunction(value2):
+            self._validator_function = copy.deepcopy(value2)
+        else:
+            raise TypeError('Must be set to a function or None.')
+
+    def available_validators(self):
+        """ Returns the available validators and number of parameters.
+
+        Returns the ``str`` identifiers for the simple validators that
+        are available as well as the number of parameters each take.
+        The available validators are in the table below for convenience.
+        N is the number of parameters it takes. V is the value of this
+        setting. X is the first (or only) parameter and Y is the
+        second.
+
+        ==========================  =  ================================
+        validator                   N  Valid if
+        ==========================  =  ================================
+        ``'GreaterThan'``           1  V > X
+        ``'LessThan'``              1  V < X
+        ``'GreaterThanOrEqualTo'``  1  V >= X
+        ``'LessThanOrEqualTo'``     1  V <= X
+        ``'NotEqual'``              1  V != X
+        ``'Between'``               2  min(X, Y) <= V <= max(X, Y)
+        ``'NotBetween'``            2  V <= min(X, Y) OR V >= max(X, Y)
+        ==========================  =  ================================
+
+        Returns
+        -------
+        available_validators : tuple of str
+            The names of the validators (first column in above table).
+        number_parameters : tuple of ints
+            The number of parameters each validator takes (second
+            column in the above table).
+
+        See Also
+        --------
+        validators
+        
+        """
+        return (('GreaterThan', 'GreaterThanOrEqualTo', 'LessThan',
+                'LessThanOrEqualTo', 'Between', 'NotBetween',
+                'NotEqual'), (1, 1, 1, 1, 2, 2, 1))
+
+    def is_valid(self, all_settings):
+        """ Checks and returns whether this setting is valid or not.
+
+        Parameters
+        ----------
+        all_settings : dict
+            All the settings from the root ``Tree`` all the way to each
+            end ``Leaf``. The keys are the POSIX paths to each ``Leaf``
+            and the key is the value of the setting of the ``Leaf``.
+            Generated by calling ``Tree.list()`` on the root ``Tree``.
+
+        Returns
+        -------
+        validity : bool
+            Whether this setting is valid (``True``) or not (``False``).
+
+        See Also
+        --------
+        Tree.list
+        
+        """
+        # Check that it is one of the allowed types, is an allowed
+        # value, and is not a forbidden value.
+        if self._valid_value_types is not None \
+                and self._value not in self._valid_value_types:
+            return False
+        if self._allowed_values is not None \
+                and self._value not in self._allowed_values:
+            return False
+        if self._forbidden_values is not None \
+                and self._value in self._forbidden_values:
+            return False
+
+        # Check the value against all the simple validators. First,
+        # though, construct functions for the validators (true if
+        # valid and false otherwise).
+        vals = {'GreaterThan': lambda v, params: v > params,
+                'LessThan': lambda v, params: v < params,
+                'GreaterThanOrEqualTo': lambda v, params: v >= params,
+                'LessThanOrEqualTo': lambda v, params: v <= params,
+                'NotEqual': lambda v, params: v != params,
+                'Between': lambda v, params: v >= min(params)
+                and v <= max(params),
+                'NotBetween': lambda v, params: v <= min(params)
+                or v >= max(params)}
+        if self._validators is not None:
+            for val, params in self._validators:
+                if not vals[val](self._value, params):
+                    return False
+
+        # Check the custom validator.
+        if self._validator_function is not None:
+            try:
+                return self._validator_function(self._value,
+                                                all_settings)
+            except:
+                return False
+
+        # Must be valid since all tests were passed.
+        return True
+
+    # Implement a dictionary interface for all the extra parameters
+    # by mapping the relevant dict functions to the functions inside
+    # _extra_parameters.
+    def __len__(self):
+        """ Returns the number of extra parameters."""
+        return len(self._extra_parameters)
+    
+    def __getitem__(self, key):
+        """ Gets a particular extra parameter."""
+        return self._extra_parameters[key]
+    
+    def __setitem__(self, key, value):
+        """ Sets a particular extra parameter."""
+        self._extra_parameters[key] = value
+    
+    def __delitem__(self, key):
+        """ Removes a particular extra parameter."""
+        del self._extra_parameters[key]
+    
+    def __contains__(self, item):
+        """ Checks if a key is in the extra parameters."""
+        return self._extra_parameters.__contains__(item)
+    
+    def __iter__(self):
+        """ Returns an iterator over the extra parameters."""
+        return self._extra_parameters.__iter__()
+    
+    def keys(self):
+        """ Returns all the keys for the extra parameters."""
+        return self._extra_parameters.keys()
+    
+    def items(self):
+        """ Returns the items of the extra parameters."""
+        return self._extra_parameters.items()
 
 
 class Tree(object):
