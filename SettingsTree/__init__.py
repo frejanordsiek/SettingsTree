@@ -304,7 +304,7 @@ class Leaf(object):
                                     ' simple validator.')
                 # If one parameter, it must be a number. If two
                 # parameters it must be an iterable of two numbers.
-                if 1 == nparams(avail_vals.index(v[0])):
+                if 1 == nparams[avail_vals.index(v[0])]:
                     if not isinstance(v[1], numbers.Number):
                         raise TypeError('Parameter must be a Number')
                 else:
