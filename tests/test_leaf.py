@@ -28,10 +28,10 @@
 
 import copy
 import math
+import posixpath
 import random
 import string
 import collections
-import unittest
 
 from nose.tools import raises
 
@@ -43,15 +43,22 @@ random.seed()
 
 # A of random set of parameters to use.
 rand_params = dict()
+ltrs = string.ascii_letters + string.digits
+for i in range(random.randint(5, 10)):
+    k = ''.join([random.choice(ltrs) for j in range(0, 20)])
+    v = random.random()
+    rand_params[k] = v
 
-
-def setup_module():
-    rand_params = dict()
-    ltrs = string.ascii_letters + string.digits
-    for i in range(random.randint(5, 10)):
-        k = ''.join([random.choice(ltrs) for j in range(0, 20)])
-        v = random.random()
-        rand_params[k] = v
+# A random group of settings to use.
+settings = dict()
+for i in range(5, 20):
+    depth = random.randint(1, 6)
+    path = '/'
+    for j in range(0, depth):
+        path = posixpath.join(path, \
+            ''.join([random.choice(ltrs) \
+            for j in range(0, random.randint(4, 9))]))
+    settings[path] = random.random()
 
 
 # Test initializing a blank one.
@@ -361,3 +368,305 @@ def test_extra_parameters_keys():
 def test_extra_parameters_items():
     leaf = Leaf(**rand_params)
     assert set(rand_params.items()) == set(leaf.items())
+
+
+# Check the validity testing one test at a time.
+
+def test_validation_notests():
+    leaf = Leaf()
+    leaf.value = random.random()
+    assert leaf.is_valid(settings)
+
+
+def test_validation_type_valid_single():
+    leaf = Leaf(valid_value_types=float)
+    leaf.value = random.random()
+    assert leaf.is_valid(settings)
+
+
+def test_validation_type_valid_multi():
+    leaf = Leaf(valid_value_types=(float, int))
+    leaf.value = random.random()
+    assert leaf.is_valid(settings)
+
+
+def test_validation_type_invalid_single():
+    leaf = Leaf(valid_value_types=list)
+    leaf.value = random.random()
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_type_invalid_multi():
+    leaf = Leaf(valid_value_types=(list, tuple))
+    leaf.value = random.random()
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_allowed_values_valid():
+    leaf = Leaf()
+    x = [random.random() for i in range(5, 10)]
+    leaf.allowed_values = x
+    leaf.value = x[random.randrange(len(x))]
+    assert leaf.is_valid(settings)
+
+
+def test_validation_allowed_values_invalid():
+    leaf = Leaf()
+    x = [random.random() for i in range(5, 10)]
+    leaf.allowed_values = x
+    y = x[0]
+    while y in x:
+        y = random.random()
+    leaf.value = y
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_forbidden_values_valid():
+    leaf = Leaf()
+    x = [random.random() for i in range(5, 10)]
+    leaf.forbidden_values = x
+    y = x[0]
+    while y in x:
+        y = random.random()
+    leaf.value = y
+    assert leaf.is_valid(settings)
+
+
+def test_validation_forbidden_values_invalid():
+    leaf = Leaf()
+    x = [random.random() for i in range(5, 10)]
+    leaf.forbidden_values = x
+    leaf.value = x[random.randrange(len(x))]
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_GreaterThan_valid():
+    leaf = Leaf()
+    validators = [['GreaterThan', random.random()]]
+    leaf.validators = validators
+    for i in range(100):
+        leaf.value = validators[0][1] + 100.0 * random.random()
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_GreaterThan_invalid():
+    leaf = Leaf()
+    validators = [['GreaterThan', random.random()]]
+    leaf.validators = validators
+    leaf.value = validators[0][1]
+    assert not leaf.is_valid(settings)
+    for i in range(100):
+        leaf.value = validators[0][1] - 100.0 * random.random()
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_GreaterThanOrEqualTo_valid():
+    leaf = Leaf()
+    validators = [['GreaterThanOrEqualTo', random.random()]]
+    leaf.validators = validators
+    leaf.value = validators[0][1]
+    assert leaf.is_valid(settings)
+    for i in range(100):
+        leaf.value = validators[0][1] + 100.0 * random.random()
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_GreaterThanOrEqualTo_invalid():
+    leaf = Leaf()
+    validators = [['GreaterThanOrEqualTo', random.random()]]
+    leaf.validators = validators
+    for i in range(100):
+        leaf.value = validators[0][1] - 100.0 * random.random()
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_LessThan_valid():
+    leaf = Leaf()
+    validators = [['LessThan', random.random()]]
+    leaf.validators = validators
+    for i in range(100):
+        leaf.value = validators[0][1] - 100.0 * random.random()
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_LessThan_invalid():
+    leaf = Leaf()
+    validators = [['LessThan', random.random()]]
+    leaf.validators = validators
+    leaf.value = validators[0][1]
+    assert not leaf.is_valid(settings)
+    for i in range(100):
+        leaf.value = validators[0][1] + 100.0 * random.random()
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_LessThanOrEqualTo_valid():
+    leaf = Leaf()
+    validators = [['LessThanOrEqualTo', random.random()]]
+    leaf.validators = validators
+    leaf.value = validators[0][1]
+    assert leaf.is_valid(settings)
+    for i in range(100):
+        leaf.value = validators[0][1] - 100.0 * random.random()
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_LessThanOrEqualTo_invalid():
+    leaf = Leaf()
+    validators = [['LessThanOrEqualTo', random.random()]]
+    leaf.validators = validators
+    for i in range(100):
+        leaf.value = validators[0][1] + 100.0 * random.random()
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_NotEqual_valid():
+    leaf = Leaf()
+    validators = [['NotEqual', random.random()]]
+    leaf.validators = validators
+    x = set([random.random() for i in range(100)])
+    for v in x:
+        leaf.value = v
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_NotEqual_invalid():
+    leaf = Leaf()
+    validators = [['NotEqual', random.random()]]
+    leaf.validators = validators
+    leaf.value = validators[0][1]
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_Between_valid():
+    leaf = Leaf()
+    bounds = sorted([random.random(), random.random()])
+    validators = [['Between', bounds]]
+    leaf.validators = validators
+    x = bounds + [random.uniform(*bounds) for i in range(100)]
+    for v in x:
+        leaf.value = v
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_Between_invalid():
+    leaf = Leaf()
+    bounds = sorted([random.random(), random.random()])
+    validators = [['Between', bounds]]
+    leaf.validators = validators
+    x = [min(bounds) - 100.0 * random.random()  for i in range(100)] \
+        + [max(bounds) + 100.0 * random.random()  for i in range(100)]
+    for v in x:
+        leaf.value = v
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_BetweenNotInclusive_invalid_bounds():
+    leaf = Leaf()
+    bounds = sorted([random.random(), random.random()])
+    validators = [['Between', bounds], ['NotEqual', bounds[0]],
+                  ['NotEqual', bounds[1]]]
+    leaf.validators = validators
+    for v in bounds:
+        leaf.value = v
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validators_NotBetween_invalid():
+    leaf = Leaf()
+    bounds = sorted([random.random(), random.random()])
+    validators = [['NotBetween', bounds]]
+    leaf.validators = validators
+    x = [min(bounds) - 100.0 * random.random()  for i in range(100)] \
+        + [max(bounds) + 100.0 * random.random()  for i in range(100)] \
+        + bounds
+    for v in x:
+        leaf.value = v
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validators_NotBetween_valid():
+    leaf = Leaf()
+    bounds = sorted([random.random(), random.random()])
+    validators = [['NotBetween', bounds]]
+    leaf.validators = validators
+    x = set([random.uniform(*bounds) for i in range(100)]) - set(bounds)
+    for v in x:
+        leaf.value = v
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validator_function_valid_alwaystrue():
+    leaf = Leaf()
+    leaf.validator_function = lambda x, y: True
+    x = [random.random() for i in range(10)] + [list, 'av', [3]]
+    for v in x:
+        leaf.value = v
+        assert leaf.is_valid(settings)
+
+
+def test_validation_validator_function_valid_equalsetting():
+    leaf = Leaf()
+    name = random.choice(tuple(settings.keys()))
+    leaf.validator_function = lambda x, y: x == y[name]
+    leaf.value = settings[name]
+    assert leaf.is_valid(settings)
+
+
+def test_validation_validator_function_invalid_notequalsetting():
+    leaf = Leaf()
+    name = random.choice(tuple(settings.keys()))
+    leaf.validator_function = lambda x, y: x == y[name]
+    x = set([random.random() for i in range(100)]) - {settings[name]}
+    for v in x:
+        leaf.value = x
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validator_function_invalid_alwaysfalse():
+    leaf = Leaf()
+    leaf.validator_function = lambda x, y: False
+    x = [random.random() for i in range(10)] + [list, 'av', [3]]
+    for v in x:
+        leaf.value = v
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_validator_function_invalid_exception():
+    leaf = Leaf()
+    
+    def fun(x, y):
+        raise TypeError('blah')
+    
+    leaf.validator_function = fun
+    x = [random.random() for i in range(10)] + [list, 'av', [3]]
+    for v in x:
+        leaf.value = v
+        assert not leaf.is_valid(settings)
+
+
+def test_validation_mixed_invalid_alwaysfalse_butallowed():
+    leaf = Leaf()
+    x = random.random()
+    leaf.validator_function = lambda x, y: False
+    leaf.allowed_values = [x]
+    leaf.value = x
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_mixed_invalid_alwaystrue_butforbidden():
+    leaf = Leaf()
+    x = random.random()
+    leaf.validator_function = lambda x, y: True
+    leaf.forbidden_values = [x]
+    leaf.value = x
+    assert not leaf.is_valid(settings)
+
+
+def test_validation_mixed_invalid_allowedvalue_butwrongtype():
+    leaf = Leaf()
+    x = random.randrange(100)
+    leaf.valid_value_types = float
+    leaf.allowed_values = [x]
+    leaf.value = x
+    assert not leaf.is_valid(settings)
