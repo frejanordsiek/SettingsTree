@@ -184,7 +184,8 @@ class Leaf(object):
                     raise TypeError('An element of the iterable was not'
                                     ' a type.')
             self._valid_value_types = tuple(value2)
-        raise TypeError('Set to something invalid.')
+        else:
+            raise TypeError('Set to something invalid.')
 
     
     @property
