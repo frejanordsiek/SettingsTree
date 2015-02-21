@@ -95,6 +95,11 @@ class Leaf(object):
         Aditional keyword arguments which are put in this ``Leaf`` to
         be accessed by accessing this ``Leaf`` like a ``dict``.
 
+    Raises
+    ------
+    TypeError
+        If set to something invalid.
+
     Attributes
     ----------
     value : any type
