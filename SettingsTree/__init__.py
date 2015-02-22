@@ -668,7 +668,7 @@ class Tree(object):
         """
         self._getsetdel_item(path, 'set', value=value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, path):
         """ Gets, sets, or deletes by path.
 
         Gets, sets, or deletes by a POSIX style path. Each subdirectory
