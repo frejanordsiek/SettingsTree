@@ -260,3 +260,14 @@ def test_get_invalid_leaf_extraParameter_missing():
         else:
             threw_error = False
         assert threw_error
+
+@raises(KeyError)
+def test_get_invalid_nonTreeLeafInChildren():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    tree._children[name] = random.random()
+    v = tree[name]
+
