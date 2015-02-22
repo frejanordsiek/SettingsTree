@@ -866,9 +866,9 @@ class Tree(object):
                 else:
                     del self._children[rootpath][subpath]
             else:
-                raise KeyError(rootpath + ' is not a Tree. Only '
-                               + 'Trees can hold other Trees or '
-                               + 'Leaves.')
+                raise KeyError(rootpath + ' is not a Tree or Leaf. '
+                               'Only Trees and Leaves can hold '
+                               + 'things.')
 
     def list_all(self, tp='all'):
         """ List the children of the Tree recursively.
