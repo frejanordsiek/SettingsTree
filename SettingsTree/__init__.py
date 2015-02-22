@@ -540,9 +540,10 @@ class Tree(object):
         # Set _children to an empty ordered dict and then add the
         # elements of children one by one if it is dict like
         self._children = collections.OrderedDict()
-        if not isinstance(children, collections.Mapping):
-            raise TypeError('children must be a Mapping of Tree''s '
-                            + 'and Leaf''s.')
+        if children is not None:
+            if not isinstance(children, collections.Mapping):
+                raise TypeError('children must be a Mapping of '
+                                + 'Tree''s and Leaf''s.')
             for k, v in children.items():
                 if isinstance(v, (Tree, Leaf)):
                     self[k] = v
