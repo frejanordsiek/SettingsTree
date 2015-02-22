@@ -271,3 +271,209 @@ def test_get_invalid_nonTreeLeafInChildren():
     tree._children[name] = random.random()
     v = tree[name]
 
+@raises(KeyError)
+def test_get_invalid_nested_nonTreeLeafInChildren():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    name2 = ''.join([random.choice(ltrs)
+                    for j in range(0, random.randint(4, 9))])
+    tree._children[name] = random.random()
+    v = tree[posixpath.join(name, name2)]
+
+
+# Test set access.
+
+def test_set_leaf():
+    tree = Tree()
+    for k, v in random_leaves.items():
+        tree[k] = v
+        assert tree[k + posixpath.sep] == v
+    assert len(tree) == len(random_leaves)
+
+def test_set_leaf_value():
+    values = [(k, random.random()) for k in random_leaves]
+    tree = Tree(children=random_leaves)
+    for k, v in values:
+        tree[k] = v
+        assert v == tree[k]
+    assert len(tree) == len(random_leaves)
+
+def test_set_tree():
+    name = 'nvienva'
+    tree1 = Tree()
+    tree2 = Tree()
+    tree2[name] = tree1
+    assert tree1 == tree2[name + posixpath.sep]
+
+def test_set_tree_overwrite():
+    name = random.choice(tuple(random_leaves.keys()))
+    tree1 = Tree()
+    tree2 = Tree(children=random_leaves)
+    tree2[name] = tree1
+    assert tree1 == tree2[name + posixpath.sep]
+    assert len(random_leaves) == len(tree2)
+
+def test_set_leaf_overwrite():
+    name = random.choice(tuple(random_leaves.keys()))
+    tree = Tree()
+    leaf = Leaf()
+    for k in random_leaves:
+        tree[k] = Tree()
+    tree[name] = leaf
+    assert leaf == tree[name + posixpath.sep]
+    assert len(random_leaves) == len(tree)
+
+def test_set_nested_leaf():
+    name = 'nvienva'
+    tree = Tree(children={name: Tree()})
+    for k, v in random_leaves.items():
+        tree[posixpath.join(name, k)] = v
+        assert v == tree[posixpath.join(name, k) + posixpath.sep]
+    assert len(tree[name]) == len(random_leaves)
+
+def test_set_nested_leaf_value():
+    name = 'nvienva'
+    values = [(k, random.random()) for k in random_leaves]
+    tree = Tree(children={name: Tree(children=random_leaves)})
+    for k, v in values:
+        tree[posixpath.join(name, k)] = v
+        assert v == tree[posixpath.join(name, k)]
+    assert len(tree[name]) == len(random_leaves)
+
+def test_set_leaf_extraParameter():
+    name = 'aivnennb'
+    tree = Tree(children={name: Leaf()})
+    for k, v in rand_params.items():
+        tree[posixpath.join(name, k)] = v
+        assert v == tree[posixpath.join(name, k)]
+    assert len(rand_params) == len(tree[name + posixpath.sep])
+
+@raises(KeyError)
+def test_set_invalid_root():
+    tree = Tree(children=random_leaves)
+    tree[posixpath.sep] = Tree()
+
+@raises(KeyError)
+def test_set_invalid_value_missing():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    tree[name] = random.random()
+
+@raises(TypeError)
+def test_set_invalid_tree_value():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    tree[name] = Tree()
+    tree[name] = random.random()
+
+@raises(KeyError)
+def test_set_invalid_nonTreeLeafInChildren():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    tree._children[name] = random.random()
+    tree[name] = random.random()
+
+@raises(KeyError)
+def test_set_invalid_nested_nonTreeLeafInChildren():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    name2 = ''.join([random.choice(ltrs)
+                    for j in range(0, random.randint(4, 9))])
+    tree._children[name] = random.random()
+    tree[posixpath.join(name, name2)] = random.random()
+
+
+# Test del access
+
+def test_del_leaf():
+    tree = Tree(children=random_leaves)
+    keys = tuple(random_leaves.keys())
+    for i in reversed(range(len(keys))):
+        del tree[keys[i]]
+        assert keys[i] not in tree
+        assert i == len(tree)
+
+def test_del_tree():
+    tree = Tree(children={k: Tree() for k in random_leaves})
+    keys = tuple(random_leaves.keys())
+    for i in reversed(range(len(keys))):
+        del tree[keys[i]]
+        assert keys[i] not in tree
+        assert i == len(tree)
+
+def test_del_nested_leaf():
+    name = 'nvienva'
+    tree = Tree(children={name: Tree(children=random_leaves)})
+    keys = tuple(random_leaves.keys())
+    for i in reversed(range(len(keys))):
+        del tree[posixpath.join(name, keys[i])]
+        assert posixpath.join(name, keys[i]) not in tree
+        assert i == len(tree[name + posixpath.sep])
+
+def test_del_nested_tree():
+    name = 'nvienva'
+    tree = Tree(children={name: Tree(
+                children=dict([(k, Tree()) for k in random_leaves]))})
+    keys = tuple(random_leaves.keys())
+    for i in reversed(range(len(keys))):
+        del tree[posixpath.join(name, keys[i])]
+        assert posixpath.join(name, keys[i]) not in tree
+        assert i == len(tree[name + posixpath.sep])
+
+def test_del_leaf_extraParameter():
+    name = 'aivnennb'
+    tree = Tree(children={name: Leaf(**rand_params)})
+    keys = tuple(rand_params.keys())
+    for i in reversed(range(len(keys))):
+        del tree[posixpath.join(name, keys[i])]
+        assert posixpath.join(name, keys[i]) not in tree
+        assert i == len(tree[name + posixpath.sep])
+
+@raises(KeyError)
+def test_del_invalid_root():
+    tree = Tree(children=random_leaves)
+    del tree[posixpath.sep]
+
+@raises(KeyError)
+def test_del_invalid_missing():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    del tree[name]
+
+@raises(KeyError)
+def test_del_invalid_nested_nonTreeLeafInChildren():
+    tree = Tree(children=random_leaves)
+    name = None
+    while name is None or name in random_leaves:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    name2 = ''.join([random.choice(ltrs)
+                    for j in range(0, random.randint(4, 9))])
+    tree._children[name] = random.random()
+    del tree[posixpath.join(name, name2)]
+
+
+# Call _getsetdel_item with an invalid operation
+@raises(ValueError)
+def test_getsetdel_item_invalid_operation():
+    tree = Tree(children=random_leaves)
+    name = random.choice(tuple(random_leaves.keys()))
+    tree._getsetdel_item(path=name, operation='avaj')
