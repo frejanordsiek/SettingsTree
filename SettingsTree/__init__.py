@@ -851,7 +851,7 @@ class Tree(object):
             # Tree or Leaf (means the remainder of the path is an extra
             # parameter).
             rootpath = spath[:index]
-            subpath = spath[index:]
+            subpath = spath[(index + 1):]
             if rootpath not in self._children:
                 if operation == 'set' \
                         and isinstance(value, (Tree, Leaf)):
