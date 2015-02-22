@@ -715,8 +715,9 @@ class Tree(object):
 
         If doing a set `operation` and `value` is a ``Tree`` or
         ``Leaf``, then the location pointed to by `path` is set to
-        `value`. Otherwise, `path` must point to a ``Leaf``, in which
-        case its value is set to `leaf`.
+        `value` even if parent ``Tree`` need to be made. Otherwise,
+        `path` must point to a ``Leaf``, in which case its value is set
+        to `leaf`.
 
         If doing a del `operation`, the ``Leaf`` or ``Tree`` pointed to
         by `path` is deleted.
@@ -844,13 +845,19 @@ class Tree(object):
             # The separator is in the middle, meaning that there is more
             # path after it. So, the part before and the part after need
             # to be obtained. If the part before is not in this Tree's
-            # children, an error must be riased. Otherwise, we need to
-            # recurse into that Tree or Leaf (means the remainder of the
-            # path is an extra parameter).
+            # children, a Tree must be made if value is a Tree or Leaf
+            # and we are doing a set operation and an error must be
+            # riased otherwise. Otherwise, we need to recurse into that
+            # Tree or Leaf (means the remainder of the path is an extra
+            # parameter).
             rootpath = spath[:index]
             subpath = spath[index:]
             if rootpath not in self._children:
-                raise KeyError('Couldn''t find ' + rootpath + '.')
+                if operation == 'set' \
+                        and isinstance(value, (Tree, Leaf)):
+                    self[rootpath] = Tree(children={subpath: value})
+                else:
+                    raise KeyError('Couldn''t find ' + rootpath + '.')
             elif isinstance(self._children[rootpath], (Tree, Leaf)):
                 if operation == 'get':
                     return self._children[rootpath][subpath]
