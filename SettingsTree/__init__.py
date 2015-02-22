@@ -814,7 +814,7 @@ class Tree(object):
                 elif isinstance(self._children[spath], Leaf):
                     return self._children[spath].value
                 elif isinstance(self._children[spath], Tree):
-                    return list(self._children.keys())
+                    return list(self._children[spath].keys())
                 else:
                     raise KeyError(spath + ' is an invalid object.')
             else:
