@@ -770,9 +770,9 @@ class Tree(object):
         # Tree. If it is two in a row, return the list of all
         # children.
         if operation == 'get':
-            if path == posixpath.sep:
+            if path == 2 * posixpath.sep:
                 return self
-            elif path == 2 * posixpath.sep:
+            elif path == posixpath.sep:
                 return list(self._children.keys())
 
         # Sanitize the path normalizing out '../' and stuff.
