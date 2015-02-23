@@ -63,7 +63,7 @@ for i in range(20, 40):
 # Make a group of random leaves with full paths to them.
 random_path_leaves = dict()
 for i in range(20, 40):
-    depth = random.randint(1, 6)
+    depth = random.randint(4, 6)
     path = '/'
     for j in range(0, depth):
         path = posixpath.join(path, \
@@ -477,3 +477,226 @@ def test_getsetdel_item_invalid_operation():
     tree = Tree(children=random_leaves)
     name = random.choice(tuple(random_leaves.keys()))
     tree._getsetdel_item(path=name, operation='avaj')
+
+
+# Test list_all.
+
+def test_list_all_empty_tree():
+    tree = Tree()
+    for tp in ('all', 'tree', 'leaf'):
+        assert 0 == len(tree.list_all(tp=tp))
+
+def test_list_all_just_leaves():
+    tree = Tree(children=random_leaves)
+    assert 0 == len(tree.list_all(tp='tree'))
+    names = tree.list_all(tp='leaf')
+    assert names == tree.list_all(tp='all')
+    assert len(names) == len(random_leaves)
+    assert len(names) == len(set(names))
+    for name in names:
+        assert 1 == name.count(posixpath.sep)
+        assert name[0] == posixpath.sep
+        assert name in tree
+        assert name[1:] in random_leaves
+
+def test_list_all_just_trees():
+    tree = Tree(children=dict([(k, Tree()) for k in random_leaves]))
+    assert 0 == len(tree.list_all(tp='leaf'))
+    names = tree.list_all(tp='tree')
+    assert names == tree.list_all(tp='all')
+    assert len(names) == len(random_leaves)
+    assert len(names) == len(set(names))
+    for name in names:
+        assert 1 == name.count(posixpath.sep)
+        assert name[0] == posixpath.sep
+        assert name in tree
+        assert name[1:] in random_leaves
+
+def test_list_all_mixed():
+    tps = ('all', 'tree', 'leaf')
+    tree = Tree(children=random_path_leaves)
+    names = dict([(tp, tuple(tree.list_all(tp=tp))) for tp in tps])
+    for tp in tps:
+        assert len(names[tp]) == len(set(names[tp]))
+    assert len(names['all']) == len(names['tree']) + len(names['leaf'])
+    assert 0 == len(set(names['tree']).intersection(set(names['leaf'])))
+    assert sorted(names['all']) == sorted(names['leaf'] + names['tree'])
+    assert len(random_path_leaves) == len(names['leaf'])
+    assert sorted(list(random_path_leaves.keys())) \
+        == sorted(names['leaf'])
+    for name in names['all']:
+        assert name in tree
+        assert posixpath.sep == name[0]
+    for name in names['tree']:
+        assert isinstance(tree[name + posixpath.sep], Tree)
+        count = 0
+        for s in random_path_leaves:
+            if s.startswith(name):
+                count += 1
+        assert 1 == count
+
+@raises(ValueError)
+def test_list_all_invalid_type():
+    tree = Tree(children=random_path_leaves)
+    v = tree.list_all(tp='anvienviavjonba')
+
+
+# Test diff
+
+def test_diff_identical():
+    tree1 = Tree(children=random_path_leaves)
+    tree2 = Tree(children=random_path_leaves)
+    assert ([], [], []) == tree1.diff(tree2)
+
+def test_diff_different_subsets():
+    length = len(random_path_leaves)
+    for i in range(10):
+        number = random.randrange(int(math.floor(0.33 * length)),
+                                  int(math.floor(0.66 * length)))
+        leaves1 = dict(random.sample(random_path_leaves.items(),
+                       number))
+        leaves2 = dict(random.sample(random_path_leaves.items(),
+                       number))
+        tree1 = Tree(children=leaves1)
+        tree2 = Tree(children=leaves2)
+        different_values, only_in_1, only_in_2 = tree1.diff(tree2)
+        assert 0 == len( \
+            set(different_values).intersection(set(only_in_1)))
+        assert 0 == len( \
+            set(different_values).intersection(set(only_in_2)))
+        assert 0 == len(set(only_in_1).intersection(set(only_in_2)))
+        for name in different_values:
+            assert name in leaves1
+            assert name in leaves2
+        for name in only_in_1:
+            assert name in leaves1
+            assert name not in leaves2
+        for name in only_in_2:
+            assert name not in leaves1
+            assert name in leaves2
+
+def test_diff_different_values():
+    length = len(random_path_leaves)
+    for i in range(10):
+        leaves1 = copy.deepcopy(random_path_leaves)
+        leaves2 = copy.deepcopy(leaves1)
+        number = random.randrange(int(math.floor(0.33 * length)),
+                                  int(math.floor(0.66 * length)))
+        keys = random.sample(list(leaves1.keys()), number)
+        for k in keys:
+            while leaves1[k].value == leaves2[k].value:
+                leaves2[k].value = random.random()
+        tree1 = Tree(children=leaves1)
+        tree2 = Tree(children=leaves2)
+        different_values, only_in_1, only_in_2 = tree1.diff(tree2)
+        assert 0 == len(only_in_1)
+        assert 0 == len(only_in_2)
+        assert sorted(keys) == sorted(different_values)
+
+@raises(TypeError)
+def test_diff_invalid_nonTree():
+    tree = Tree(children=random_path_leaves)
+    tree.diff(tree=random.random())
+
+
+# test get_values
+
+def test_get_values_paths():
+    tree = Tree(children=random_path_leaves)
+    values = dict([(k, v.value) for k, v in random_path_leaves.items()])
+    assert values == tree.get_values(form='paths')
+
+def test_get_values_nested():
+    values = dict()
+    tree = Tree()
+    for i in range(1000):
+        path = [random.choice(ltrs) for i in range(10)]
+        val_ptr = values
+        for k in range(len(path) - 1):
+            if path[k] not in val_ptr:
+                val_ptr[path[k]] = dict()
+            val_ptr = val_ptr[path[k]]
+        val_ptr[path[-1]] = random.random()
+        tree[posixpath.join(*path)] = Leaf(value=val_ptr[path[-1]])
+    assert values == tree.get_values(form='nested')
+
+@raises(ValueError)
+def test_get_values_invalid_form():
+    tree = Tree(children=random_path_leaves)
+    tree.get_values(form='anvien2')
+
+
+# Test set_values
+
+def test_set_values_paths():
+    tree = Tree(children=random_path_leaves)
+    values = dict([(k, random.random()) for k in random_path_leaves])
+    tree.set_values(values=values)
+    assert values == tree.get_values(form='paths')
+
+def test_set_values_nested():
+    values = dict()
+    tree = Tree()
+    for i in range(1000):
+        path = [random.choice(ltrs) for i in range(10)]
+        val_ptr = values
+        for k in range(len(path) - 1):
+            if path[k] not in val_ptr:
+                val_ptr[path[k]] = dict()
+            val_ptr = val_ptr[path[k]]
+        val_ptr[path[-1]] = random.random()
+        tree[posixpath.join(*path)] = Leaf(value=random.random())
+    tree.set_values(values=values)
+    assert values == tree.get_values(form='nested')
+
+def test_set_values_paths_missing():
+    tree = Tree(children=random_path_leaves)
+    values = dict([(k, random.random()) for k in random_path_leaves])
+    name = None
+    while name is None or name in values:
+        name = ''.join([random.choice(ltrs)
+                       for j in range(0, random.randint(4, 9))])
+    values2 = copy.deepcopy(values)
+    values2[name] = random.random()
+    tree.set_values(values=values2)
+    assert values == tree.get_values(form='paths')
+
+def test_set_values_paths_nonMappingInput():
+    tree = Tree(children=random_path_leaves)
+    values = dict([(k, v.value) for k, v in random_path_leaves.items()])
+    name = random.choice(tuple(values.keys()))
+    name2 = posixpath.sep \
+        + posixpath.join(*name.split(posixpath.sep)[:3])
+    values2 = copy.deepcopy(values)
+    del values2[name]
+    values2[name2] = random.random()
+    tree.set_values(values=values2)
+    values_out = tree.get_values(form='paths')
+    assert values2 != values_out
+    assert values == values_out
+
+@raises(TypeError)
+def test_set_values_invalid_form():
+    tree = Tree(children=random_path_leaves)
+    tree.set_values(values='anvien2')
+
+
+# Test find_invalids and is_valid together
+
+def test_validity_allValid():
+    tree = Tree(children=random_path_leaves)
+    assert 0 == len(tree.find_invalids())
+    assert tree.is_valid()
+
+def test_validity_differentNumbersOfInvalids():
+    names = tuple(random_path_leaves.keys())
+    for i in range(len(random_path_leaves)):
+        keys = random.sample(names, i)
+        leaves = copy.deepcopy(random_path_leaves)
+        for k in keys:
+            leaves[k].validator_function = lambda x, y: False
+        tree = Tree(children=leaves)
+        invalids = tree.find_invalids()
+        assert i == len(invalids)
+        assert sorted(keys) == sorted(invalids)
+        assert (i != 0) != tree.is_valid()
