@@ -1137,10 +1137,13 @@ class Tree(object):
         if not isinstance(values, collections.Mapping):
             raise TypeError('values must be dict-like (inherit from '
                             + 'collections.Mapping).')
-        for k, v in values:
+        for k, v in values.items():
             if k in self:
-                if isinstance(self[k], Leaf):
-                    self[k].value = v
-                elif isinstance(self[k], Tree):
-                    if isinstance(v, dict):
-                        self[k].set_values(v)
+                path = k + posixpath.sep
+                if isinstance(self[path], Leaf):
+                    self[path].value = v
+                elif isinstance(self[path], Tree):
+                    if isinstance(v, collections.Mapping):
+                        self[path].set_values(v)
+                else:
+                    raise KeyError(k + ' is an invalid object.')
