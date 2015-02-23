@@ -700,3 +700,58 @@ def test_validity_differentNumbersOfInvalids():
         assert i == len(invalids)
         assert sorted(keys) == sorted(invalids)
         assert (i != 0) != tree.is_valid()
+
+
+# Do tests on the Tree's extra parameters abilities.
+
+def test_extra_parameters_contains():
+    tree = Tree(blah='3a', nd=4.2)
+    assert tree.extra_parameters_contains('blah')
+    assert tree.extra_parameters_contains('nd')
+    assert not tree.extra_parameters_contains('somethingelse')
+
+def test_extra_parameters_get():
+    tree = Tree(blah='3a', nd=4.2)
+    assert '3a' == tree.extra_parameters_getitem('blah')
+    assert 4.2 == tree.extra_parameters_getitem('nd')
+
+def test_extra_parameters_set():
+    tree = Tree()
+    param = ('adfjadfka', 3934)
+    tree.extra_parameters_setitem(param[0], param[1])
+    assert tree.extra_parameters_contains(param[0])
+    assert param[1] == tree.extra_parameters_getitem(param[0])
+
+def test_extra_parameters_del():
+    param = {'adfjadfka': 3934}
+    tree = Tree(**param)
+    assert tree.extra_parameters_contains(list(param.keys())[0])
+    tree.extra_parameters_delitem(list(param.keys())[0])
+    assert not tree.extra_parameters_contains(list(param.keys())[0])
+
+def test_extra_parameters_len():
+    tree = Tree(**rand_params)
+    assert len(rand_params) == tree.extra_parameters_len()
+
+def test_extra_parameters_values():
+    tree = Tree(**rand_params)
+    assert len(rand_params) == tree.extra_parameters_len()
+    for k, v in rand_params.items():
+        assert tree.extra_parameters_contains(k)
+        assert v == tree.extra_parameters_getitem(k)
+
+def test_extra_parameters_iteration():
+    tree = Tree(**rand_params)
+    assert len(rand_params) == tree.extra_parameters_len()
+    for k in tree.extra_parameters_iter():
+        assert k in rand_params
+        assert tree.extra_parameters_getitem(k) == rand_params[k]
+
+def test_extra_parameters_keys():
+    tree = Tree(**rand_params)
+    assert set(rand_params.keys()) == set(tree.extra_parameters_keys())
+
+def test_extra_parameters_items():
+    tree = Tree(**rand_params)
+    assert set(rand_params.items()) \
+        == set(tree.extra_parameters_items())

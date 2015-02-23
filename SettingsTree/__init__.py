@@ -1147,3 +1147,71 @@ class Tree(object):
                         self[path].set_values(v)
                 else:
                     raise KeyError(k + ' is an invalid object.')
+
+    # Implement an interface to extra_parameters mapping the dictionary
+    # interface for all the extra parameters by mapping the relevant
+    # dict functions to the functions to take their place (since dict
+    # access to Tree is already given for accessing children).
+    def extra_parameters_len(self):
+        """ Returns the number of extra parameters.
+
+        Maps to ``__len__`` in the extra parameters.
+
+        """
+        return len(self._extra_parameters)
+
+    def extra_parameters_getitem(self, key):
+        """ Gets a particular extra parameter.
+
+        Maps to ``__getitem__`` in the extra parameters.
+
+        """
+        return self._extra_parameters[key]
+
+    def extra_parameters_setitem(self, key, value):
+        """ Sets a particular extra parameter.
+
+        Maps to ``__setitem__`` in the extra parameters.
+
+        """
+        self._extra_parameters[key] = value
+
+    def extra_parameters_delitem(self, key):
+        """ Removes a particular extra parameter.
+
+        Maps to ``__delitem__`` in the extra parameters.
+
+        """
+        del self._extra_parameters[key]
+
+    def extra_parameters_contains(self, item):
+        """ Checks if a key is in the extra parameters.
+
+        Maps to ``__contains__`` in the extra parameters.
+
+        """
+        return self._extra_parameters.__contains__(item)
+
+    def extra_parameters_iter(self):
+        """ Returns an iterator over the extra parameters.
+
+        Maps to ``__iter__`` in the extra parameters.
+
+        """
+        return self._extra_parameters.__iter__()
+
+    def extra_parameters_keys(self):
+        """ Returns all the keys for the extra parameters.
+
+        Maps to ``keys`` in the extra parameters.
+
+        """
+        return self._extra_parameters.keys()
+
+    def extra_parameters_items(self):
+        """ Returns the items of the extra parameters.
+
+        Maps to ``items`` in the extra parameters.
+
+        """
+        return self._extra_parameters.items()
