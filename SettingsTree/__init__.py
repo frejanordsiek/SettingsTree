@@ -995,8 +995,10 @@ class Tree(object):
         in_both.sort()
 
         # Take only those in both that have different values.
-        different_values = list(itertools.filterfalse(lambda x:
-                                self[x] == tree[x], in_both))
+        different_values = []
+        for k in in_both:
+            if self[k] != tree[k]:
+                different_values.append(k)
 
         return (different_values, only_in_self, only_in_tree)
 
