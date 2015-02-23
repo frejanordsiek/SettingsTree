@@ -1098,7 +1098,7 @@ class Tree(object):
                 if isinstance(v, Leaf):
                     out[k] = v.value
                 else:
-                    out[k] = v.extract_values(form=form)
+                    out[k] = v.get_values(form=form)
             return out
         else:
             raise ValueError('form must be either ''paths'' or'
