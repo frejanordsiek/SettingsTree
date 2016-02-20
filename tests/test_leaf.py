@@ -266,12 +266,6 @@ def test_set_validators_invalid_nonnumber_parameter():
 # Test all correct ways to set validator_function and a few incorrect
 # ones.
 
-def test_undo_validator_function():
-    leaf = Leaf()
-    x = None
-    leaf.validator_function = x
-    assert x == leaf.validator_function
-
 
 def test_set_validator_function():
     leaf = Leaf()
@@ -279,6 +273,14 @@ def test_set_validator_function():
     leaf.validator_function = x
     out = leaf.validator_function
     assert x == out
+
+
+def test_undo_validator_function():
+    leaf = Leaf(validator_function=lambda y, z: True)
+    assert leaf.validator_function is not None
+    x = None
+    leaf.validator_function = x
+    assert x == leaf.validator_function
 
 
 @raises(TypeError)
