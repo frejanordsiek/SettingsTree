@@ -62,7 +62,13 @@ def test_fully_initialized_leaf():
                 blah=10)
 
 
-# Test setting the value.
+# Test initializing to a set value and setting the value.
+def test_initialize_value():
+    x = random.random()
+    leaf = Leaf(value=x)
+    assert x == leaf.value
+
+
 def test_set_value():
     leaf = Leaf()
     x = random.random()
@@ -74,7 +80,8 @@ def test_set_value():
 # ones.
 
 def test_undo_valid_value_types():
-    leaf = Leaf()
+    leaf = Leaf(valid_value_types=int)
+    assert leaf.valid_value_types is not None
     x = None
     leaf.valid_value_types = x
     assert x == leaf.valid_value_types
@@ -119,7 +126,8 @@ def test_set_valid_value_types_list_with_one_invalid():
 # ones.
 
 def test_undo_allowed_values():
-    leaf = Leaf()
+    leaf = Leaf(allowed_values=(3,))
+    assert leaf.allowed_values is not None
     x = None
     leaf.allowed_values = x
     assert x == leaf.allowed_values
@@ -147,7 +155,8 @@ def test_set_allowed_values_invalid_noniterable():
 # ones.
 
 def test_undo_forbidden_values():
-    leaf = Leaf()
+    leaf = Leaf(forbidden_values=(3,))
+    assert leaf.forbidden_values is not None
     x = None
     leaf.forbidden_values = x
     assert x == leaf.forbidden_values
@@ -175,7 +184,8 @@ def test_set_forbidden_values_invalid_noniterable():
 # ones.
 
 def test_undo_validators():
-    leaf = Leaf()
+    leaf = Leaf(validators=[['LessThan', 2]])
+    assert leaf.validators is not None
     x = None
     leaf.validators = x
     assert x == leaf.validators
