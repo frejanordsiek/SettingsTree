@@ -260,7 +260,7 @@ def test_set_validators_invalid_two_insteadof_one_parameter():
 
 
 @raises(TypeError)
-def test_set_validators_invalid_one__parameter_in_iterable():
+def test_set_validators_invalid_one_parameter_in_iterable():
     leaf = Leaf()
     x = [['LessThan', [3]]]
     leaf.validators = x
