@@ -26,8 +26,6 @@
 
 """ Tests for SettingsTree.Leaf. """
 
-import copy
-import math
 import posixpath
 import random
 import string

@@ -34,7 +34,6 @@ __version__ = "0.3"
 
 import copy
 import posixpath
-import itertools
 import collections
 import numbers
 import inspect
