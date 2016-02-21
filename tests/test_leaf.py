@@ -337,6 +337,15 @@ def test_extra_parameters_set():
     assert param[1] == leaf[param[0]]
 
 
+def test_extra_parameters_set_nonstring():
+    leaf = Leaf()
+    param = (3.4, 3934)
+    leaf[param[0]] = param[1]
+    assert len(leaf) == 1
+    assert param[0] in leaf
+    assert param[1] == leaf[param[0]]
+
+
 def test_extra_parameters_del():
     param = {'adfjadfka': 3934}
     leaf = Leaf(**param)
