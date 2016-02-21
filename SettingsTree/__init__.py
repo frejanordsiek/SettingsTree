@@ -906,7 +906,7 @@ class Tree(object):
             if isinstance(v, Leaf):
                 if tp != 'tree':
                     children.append(k)
-            else:
+            elif isinstance(v, Tree):
                 if tp != 'leaf':
                     children.append(k)
                 children.extend([posixpath.join(k, pth[1:])
