@@ -596,7 +596,7 @@ def test_validation_validators_BetweenNotInclusive_invalid_bounds():
         assert not leaf.is_valid(settings)
 
 
-def test_validation_validators_NotBetween_invalid():
+def test_validation_validators_NotBetween_valid():
     leaf = Leaf()
     bounds = sorted([random.random(), random.random()])
     validators = [['NotBetween', bounds]]
@@ -609,7 +609,7 @@ def test_validation_validators_NotBetween_invalid():
         assert leaf.is_valid(settings)
 
 
-def test_validation_validators_NotBetween_valid():
+def test_validation_validators_NotBetween_invalid():
     leaf = Leaf()
     bounds = sorted([random.random(), random.random()])
     validators = [['NotBetween', bounds]]
