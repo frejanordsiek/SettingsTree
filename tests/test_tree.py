@@ -40,6 +40,7 @@ for i in range(20, 40):
                    for j in range(0, random.randint(4, 9))])
     random_leaves[name] = Leaf(value=random.random())
 
+
 # Make a group of random leaves and empty trees
 random_treesAndLeaves = collections.OrderedDict()
 for i in range(20, 40):
@@ -49,6 +50,7 @@ for i in range(20, 40):
         random_treesAndLeaves[name] = Leaf(value=random.random())
     else:
         random_treesAndLeaves[name] = Tree()
+
 
 # Make a group of random leaves with full paths to them.
 random_path_leaves = dict()
@@ -61,6 +63,7 @@ for i in range(20, 40):
             for j in range(0, random.randint(4, 9))]))
     random_path_leaves[path] = Leaf(value=random.random())
 
+
 # A of random set of parameters to use.
 rand_params = dict()
 for i in range(random.randint(5, 10)):
@@ -68,30 +71,37 @@ for i in range(random.randint(5, 10)):
     v = random.random()
     rand_params[k] = v
 
+
 # Test initializing a blank one.
 def test_initialize_tree_blank():
     tree = Tree()
+
 
 # Test initializing a Tree with a bunch of random Leaves.
 def test_initialize_tree_leaves():
     tree = Tree(children=random_leaves)
 
+
 # Test initializing a Tree with some empty Trees.
 def test_initialize_tree_trees():
     tree = Tree(children=dict([(k, Tree()) for k in random_leaves]))
+
 
 # Test initializing a Tree with some Leaves and empty Trees.
 def test_initialize_tree_leavesAndTrees():
     tree = Tree(children=random_treesAndLeaves)
 
+
 # Test initializing a Tree with nested paths to random Leaves.
 def test_initialize_tree_paths():
     tree = Tree(children=random_path_leaves)
+
 
 # Test initializing with a non-Mappable.
 @raises(TypeError)
 def test_initialize_tree_invalid_nonMappable():
     tree = Tree(children=random.random())
+
 
 # Test initializing with something that isn't a Leaf or Tree.
 @raises(TypeError)
