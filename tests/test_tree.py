@@ -638,6 +638,12 @@ def test_diff_different_subsets():
         tree1 = Tree(children=leaves1)
         tree2 = Tree(children=leaves2)
         different_values, only_in_1, only_in_2 = tree1.diff(tree2)
+        # Check symmetry.
+        dv_2, oi1_2, oi2_2 = tree2.diff(tree1)
+        assert sorted(different_values) == sorted(dv_2)
+        assert sorted(only_in_1) == sorted(oi2_2)
+        assert sorted(only_in_2) == sorted(oi1_2)
+        # Check thoroughly.
         assert 0 == len( \
             set(different_values).intersection(set(only_in_1)))
         assert 0 == len( \
