@@ -109,11 +109,13 @@ def test_len():
         tree = Tree(children=children)
         assert len(children) == len(tree)
 
+
 # Test __contains__
 def test_in():
     tree = Tree(children=random_leaves)
     for k in random_leaves:
         assert k in tree
+
 
 def test_not_in():
     tree = Tree(children=random_leaves)
@@ -124,16 +126,19 @@ def test_not_in():
                            for j in range(0, random.randint(4, 9))])
         assert name not in tree
 
+
 # Test __iter__
 def test_iteration():
     tree = Tree(children=random_leaves)
     keys = [k for k in tree]
     assert list(random_leaves.keys()) == keys
 
+
 # Test keys.
 def test_keys():
     tree = Tree(children=random_leaves)
     assert tuple(random_leaves.keys()) == tuple(tree.keys())
+
 
 # Test items.
 def test_items():
@@ -147,36 +152,43 @@ def test_get_root():
     tree = Tree(children=random_treesAndLeaves)
     assert tree == tree[2 * posixpath.sep]
 
+
 def test_get_root_children():
     tree = Tree(children=random_treesAndLeaves)
     assert list(random_treesAndLeaves.keys()) \
         == tree[posixpath.sep]
+
 
 def test_get_leaf():
     tree = Tree(children=random_leaves)
     for k, v in random_leaves.items():
         assert v == tree[k + posixpath.sep]
 
+
 def test_get_leaf_value():
     tree = Tree(children=random_leaves)
     for k, v in random_leaves.items():
         assert v.value == tree[k]
+
 
 def test_get_nested_leaf():
     tree = Tree(children=random_path_leaves)
     for k, v in random_path_leaves.items():
         assert v == tree[k + posixpath.sep]
 
+
 def test_get_nested_leaf_value():
     tree = Tree(children=random_path_leaves)
     for k, v in random_path_leaves.items():
         assert v.value == tree[k]
+
 
 def test_get_leaf_extraParameter():
     name = 'aivnennb'
     tree = Tree(children={name: Leaf(**rand_params)})
     for k, v in rand_params.items():
         assert v == tree[posixpath.join(name, k)]
+
 
 def test_get_tree():
     name = 'avaivneav'
@@ -189,6 +201,7 @@ def test_get_tree_children():
     tree1 = Tree(children=random_leaves)
     tree2 = Tree(children={name: tree1})
     assert list(tree1.keys()) == tree2[name]
+
 
 def test_get_invalid_missing():
     tree = Tree(children=random_leaves)
@@ -205,6 +218,7 @@ def test_get_invalid_missing():
             threw_error = False
         assert threw_error
 
+
 def test_get_invalid_missing_grabValue():
     tree = Tree(children=random_leaves)
     for i in range(100):
@@ -220,6 +234,7 @@ def test_get_invalid_missing_grabValue():
             threw_error = False
         assert threw_error
 
+
 def test_get_invalid_missing_subtree():
     tree = Tree(children=random_leaves)
     for i in range(100):
@@ -234,6 +249,7 @@ def test_get_invalid_missing_subtree():
         else:
             threw_error = False
         assert threw_error
+
 
 def test_get_invalid_leaf_extraParameter_missing():
     name = 'aivnennb'
@@ -251,6 +267,7 @@ def test_get_invalid_leaf_extraParameter_missing():
             threw_error = False
         assert threw_error
 
+
 @raises(KeyError)
 def test_get_invalid_nonTreeLeafInChildren():
     tree = Tree(children=random_leaves)
@@ -260,6 +277,7 @@ def test_get_invalid_nonTreeLeafInChildren():
                        for j in range(0, random.randint(4, 9))])
     tree._children[name] = random.random()
     v = tree[name]
+
 
 @raises(KeyError)
 def test_get_invalid_nested_nonTreeLeafInChildren():
@@ -283,6 +301,7 @@ def test_set_leaf():
         assert tree[k + posixpath.sep] == v
     assert len(tree) == len(random_leaves)
 
+
 def test_set_leaf_value():
     values = [(k, random.random()) for k in random_leaves]
     tree = Tree(children=random_leaves)
@@ -291,12 +310,14 @@ def test_set_leaf_value():
         assert v == tree[k]
     assert len(tree) == len(random_leaves)
 
+
 def test_set_tree():
     name = 'nvienva'
     tree1 = Tree()
     tree2 = Tree()
     tree2[name] = tree1
     assert tree1 == tree2[name + posixpath.sep]
+
 
 def test_set_tree_overwrite():
     name = random.choice(tuple(random_leaves.keys()))
@@ -305,6 +326,7 @@ def test_set_tree_overwrite():
     tree2[name] = tree1
     assert tree1 == tree2[name + posixpath.sep]
     assert len(random_leaves) == len(tree2)
+
 
 def test_set_leaf_overwrite():
     name = random.choice(tuple(random_leaves.keys()))
@@ -316,6 +338,7 @@ def test_set_leaf_overwrite():
     assert leaf == tree[name + posixpath.sep]
     assert len(random_leaves) == len(tree)
 
+
 def test_set_nested_leaf():
     name = 'nvienva'
     tree = Tree(children={name: Tree()})
@@ -323,6 +346,7 @@ def test_set_nested_leaf():
         tree[posixpath.join(name, k)] = v
         assert v == tree[posixpath.join(name, k) + posixpath.sep]
     assert len(tree[name]) == len(random_leaves)
+
 
 def test_set_nested_leaf_value():
     name = 'nvienva'
@@ -333,6 +357,7 @@ def test_set_nested_leaf_value():
         assert v == tree[posixpath.join(name, k)]
     assert len(tree[name]) == len(random_leaves)
 
+
 def test_set_leaf_extraParameter():
     name = 'aivnennb'
     tree = Tree(children={name: Leaf()})
@@ -341,10 +366,12 @@ def test_set_leaf_extraParameter():
         assert v == tree[posixpath.join(name, k)]
     assert len(rand_params) == len(tree[name + posixpath.sep])
 
+
 @raises(KeyError)
 def test_set_invalid_root():
     tree = Tree(children=random_leaves)
     tree[posixpath.sep] = Tree()
+
 
 @raises(KeyError)
 def test_set_invalid_value_missing():
@@ -354,6 +381,7 @@ def test_set_invalid_value_missing():
         name = ''.join([random.choice(ltrs)
                        for j in range(0, random.randint(4, 9))])
     tree[name] = random.random()
+
 
 @raises(TypeError)
 def test_set_invalid_tree_value():
@@ -365,6 +393,7 @@ def test_set_invalid_tree_value():
     tree[name] = Tree()
     tree[name] = random.random()
 
+
 @raises(KeyError)
 def test_set_invalid_nonTreeLeafInChildren():
     tree = Tree(children=random_leaves)
@@ -374,6 +403,7 @@ def test_set_invalid_nonTreeLeafInChildren():
                        for j in range(0, random.randint(4, 9))])
     tree._children[name] = random.random()
     tree[name] = random.random()
+
 
 @raises(KeyError)
 def test_set_invalid_nested_nonTreeLeafInChildren():
@@ -398,6 +428,7 @@ def test_del_leaf():
         assert keys[i] not in tree
         assert i == len(tree)
 
+
 def test_del_tree():
     tree = Tree(children={k: Tree() for k in random_leaves})
     keys = tuple(random_leaves.keys())
@@ -405,6 +436,7 @@ def test_del_tree():
         del tree[keys[i]]
         assert keys[i] not in tree
         assert i == len(tree)
+
 
 def test_del_nested_leaf():
     name = 'nvienva'
@@ -414,6 +446,7 @@ def test_del_nested_leaf():
         del tree[posixpath.join(name, keys[i])]
         assert posixpath.join(name, keys[i]) not in tree
         assert i == len(tree[name + posixpath.sep])
+
 
 def test_del_nested_tree():
     name = 'nvienva'
@@ -425,6 +458,7 @@ def test_del_nested_tree():
         assert posixpath.join(name, keys[i]) not in tree
         assert i == len(tree[name + posixpath.sep])
 
+
 def test_del_leaf_extraParameter():
     name = 'aivnennb'
     tree = Tree(children={name: Leaf(**rand_params)})
@@ -434,10 +468,12 @@ def test_del_leaf_extraParameter():
         assert posixpath.join(name, keys[i]) not in tree
         assert i == len(tree[name + posixpath.sep])
 
+
 @raises(KeyError)
 def test_del_invalid_root():
     tree = Tree(children=random_leaves)
     del tree[posixpath.sep]
+
 
 @raises(KeyError)
 def test_del_invalid_missing():
@@ -447,6 +483,7 @@ def test_del_invalid_missing():
         name = ''.join([random.choice(ltrs)
                        for j in range(0, random.randint(4, 9))])
     del tree[name]
+
 
 @raises(KeyError)
 def test_del_invalid_nested_nonTreeLeafInChildren():
@@ -476,6 +513,7 @@ def test_list_all_empty_tree():
     for tp in ('all', 'tree', 'leaf'):
         assert 0 == len(tree.list_all(tp=tp))
 
+
 def test_list_all_just_leaves():
     tree = Tree(children=random_leaves)
     assert 0 == len(tree.list_all(tp='tree'))
@@ -489,6 +527,7 @@ def test_list_all_just_leaves():
         assert name in tree
         assert name[1:] in random_leaves
 
+
 def test_list_all_just_trees():
     tree = Tree(children=dict([(k, Tree()) for k in random_leaves]))
     assert 0 == len(tree.list_all(tp='leaf'))
@@ -501,6 +540,7 @@ def test_list_all_just_trees():
         assert name[0] == posixpath.sep
         assert name in tree
         assert name[1:] in random_leaves
+
 
 def test_list_all_mixed():
     tps = ('all', 'tree', 'leaf')
@@ -525,6 +565,7 @@ def test_list_all_mixed():
                 count += 1
         assert 1 == count
 
+
 @raises(ValueError)
 def test_list_all_invalid_type():
     tree = Tree(children=random_path_leaves)
@@ -537,6 +578,7 @@ def test_diff_identical():
     tree1 = Tree(children=random_path_leaves)
     tree2 = Tree(children=random_path_leaves)
     assert ([], [], []) == tree1.diff(tree2)
+
 
 def test_diff_different_subsets():
     length = len(random_path_leaves)
@@ -565,6 +607,7 @@ def test_diff_different_subsets():
             assert name not in leaves1
             assert name in leaves2
 
+
 def test_diff_different_values():
     length = len(random_path_leaves)
     for i in range(10):
@@ -583,6 +626,7 @@ def test_diff_different_values():
         assert 0 == len(only_in_2)
         assert sorted(keys) == sorted(different_values)
 
+
 @raises(TypeError)
 def test_diff_invalid_nonTree():
     tree = Tree(children=random_path_leaves)
@@ -595,6 +639,7 @@ def test_get_values_paths():
     tree = Tree(children=random_path_leaves)
     values = dict([(k, v.value) for k, v in random_path_leaves.items()])
     assert values == tree.get_values(form='paths')
+
 
 def test_get_values_nested():
     values = dict()
@@ -610,6 +655,7 @@ def test_get_values_nested():
         tree[posixpath.join(*path)] = Leaf(value=val_ptr[path[-1]])
     assert values == tree.get_values(form='nested')
 
+
 @raises(ValueError)
 def test_get_values_invalid_form():
     tree = Tree(children=random_path_leaves)
@@ -623,6 +669,7 @@ def test_set_values_paths():
     values = dict([(k, random.random()) for k in random_path_leaves])
     tree.set_values(values=values)
     assert values == tree.get_values(form='paths')
+
 
 def test_set_values_nested():
     values = dict()
@@ -639,6 +686,7 @@ def test_set_values_nested():
     tree.set_values(values=values)
     assert values == tree.get_values(form='nested')
 
+
 def test_set_values_paths_missing():
     tree = Tree(children=random_path_leaves)
     values = dict([(k, random.random()) for k in random_path_leaves])
@@ -650,6 +698,7 @@ def test_set_values_paths_missing():
     values2[name] = random.random()
     tree.set_values(values=values2)
     assert values == tree.get_values(form='paths')
+
 
 def test_set_values_paths_nonMappingInput():
     tree = Tree(children=random_path_leaves)
@@ -665,6 +714,7 @@ def test_set_values_paths_nonMappingInput():
     assert values2 != values_out
     assert values == values_out
 
+
 @raises(TypeError)
 def test_set_values_invalid_form():
     tree = Tree(children=random_path_leaves)
@@ -677,6 +727,7 @@ def test_validity_allValid():
     tree = Tree(children=random_path_leaves)
     assert 0 == len(tree.find_invalids())
     assert tree.is_valid()
+
 
 def test_validity_differentNumbersOfInvalids():
     names = tuple(random_path_leaves.keys())
@@ -700,10 +751,12 @@ def test_extra_parameters_contains():
     assert tree.extra_parameters_contains('nd')
     assert not tree.extra_parameters_contains('somethingelse')
 
+
 def test_extra_parameters_get():
     tree = Tree(blah='3a', nd=4.2)
     assert '3a' == tree.extra_parameters_getitem('blah')
     assert 4.2 == tree.extra_parameters_getitem('nd')
+
 
 def test_extra_parameters_set():
     tree = Tree()
@@ -712,6 +765,7 @@ def test_extra_parameters_set():
     assert tree.extra_parameters_contains(param[0])
     assert param[1] == tree.extra_parameters_getitem(param[0])
 
+
 def test_extra_parameters_del():
     param = {'adfjadfka': 3934}
     tree = Tree(**param)
@@ -719,9 +773,11 @@ def test_extra_parameters_del():
     tree.extra_parameters_delitem(list(param.keys())[0])
     assert not tree.extra_parameters_contains(list(param.keys())[0])
 
+
 def test_extra_parameters_len():
     tree = Tree(**rand_params)
     assert len(rand_params) == tree.extra_parameters_len()
+
 
 def test_extra_parameters_values():
     tree = Tree(**rand_params)
@@ -730,6 +786,7 @@ def test_extra_parameters_values():
         assert tree.extra_parameters_contains(k)
         assert v == tree.extra_parameters_getitem(k)
 
+
 def test_extra_parameters_iteration():
     tree = Tree(**rand_params)
     assert len(rand_params) == tree.extra_parameters_len()
@@ -737,9 +794,11 @@ def test_extra_parameters_iteration():
         assert k in rand_params
         assert tree.extra_parameters_getitem(k) == rand_params[k]
 
+
 def test_extra_parameters_keys():
     tree = Tree(**rand_params)
     assert set(rand_params.keys()) == set(tree.extra_parameters_keys())
+
 
 def test_extra_parameters_items():
     tree = Tree(**rand_params)
