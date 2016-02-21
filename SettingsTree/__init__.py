@@ -813,7 +813,8 @@ class Tree(object):
                 else:
                     raise KeyError(spath + ' is an invalid object.')
             else:
-                if isinstance(value, (Leaf, Tree)):
+                if operation == 'set' and isinstance(value, (Leaf,
+                                                             Tree)):
                     self._children[spath] = value
                 elif spath not in self._children:
                     raise KeyError('Couldn''t find ' + spath + '.')
