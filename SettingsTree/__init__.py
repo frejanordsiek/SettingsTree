@@ -757,6 +757,10 @@ class Tree(object):
             raise ValueError('operation must be ''get'', ''set'', '
                              + 'or ''del''.')
 
+        # Check that path is an str.
+        if not isinstance(path, str):
+            raise KeyError('path must be a str.')
+
         # If operation is get and path is just '/', then return this
         # Tree. If it is two in a row, return the list of all
         # children.

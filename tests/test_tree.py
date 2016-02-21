@@ -158,6 +158,12 @@ def test_items():
 
 # Test get access.
 
+@raises(KeyError)
+def test_get_nonstr():
+    tree = Tree(children=random_treesAndLeaves)
+    x = tree[3]
+
+
 def test_get_root():
     tree = Tree(children=random_treesAndLeaves)
     assert tree == tree[2 * posixpath.sep]
@@ -304,6 +310,12 @@ def test_get_invalid_nested_nonTreeLeafInChildren():
 
 # Test set access.
 
+@raises(KeyError)
+def test_set_nonstr():
+    tree = Tree()
+    tree[3] = 4
+
+
 def test_set_leaf():
     tree = Tree()
     for k, v in random_leaves.items():
@@ -429,6 +441,12 @@ def test_set_invalid_nested_nonTreeLeafInChildren():
 
 
 # Test del access
+
+@raises(KeyError)
+def test_get_nonstr():
+    tree = Tree(children=random_treesAndLeaves)
+    del tree[9]
+
 
 def test_del_leaf():
     tree = Tree(children=random_leaves)
