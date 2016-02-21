@@ -212,6 +212,7 @@ def test_get_tree():
     tree2 = Tree(children={name: tree1})
     assert tree1 == tree2[name + posixpath.sep]
 
+
 def test_get_tree_children():
     name = 'avaivneav'
     tree1 = Tree(children=random_leaves)
@@ -378,6 +379,23 @@ def test_set_nested_leaf_value():
         tree[posixpath.join(name, k)] = v
         assert v == tree[posixpath.join(name, k)]
     assert len(tree[name]) == len(random_leaves)
+
+
+def test_set_nested_leaf_with_tree_creation():
+    tree = Tree()
+    for k, v in random_path_leaves.items():
+        tree[k] = v
+        assert v == tree[k + posixpath.sep]
+    assert len(tree) == len(random_path_leaves)
+
+
+def test_set_nested_tree_with_tree_creation():
+    tree = Tree()
+    for k, v in random_path_leaves.items():
+        x = Tree()
+        tree[k] = x
+        assert x == tree[k + posixpath.sep]
+    assert len(tree) == len(random_path_leaves)
 
 
 def test_set_leaf_extraParameter():
