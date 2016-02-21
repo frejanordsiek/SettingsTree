@@ -1095,7 +1095,7 @@ class Tree(object):
             for k, v in self.items():
                 if isinstance(v, Leaf):
                     out[k] = v.value
-                else:
+                elif isinstance(v, Tree):
                     out[k] = v.get_values(form=form)
             return out
         else:
