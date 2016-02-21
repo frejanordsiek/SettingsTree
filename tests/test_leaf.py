@@ -309,8 +309,14 @@ def test_set_validator_function_invalid_wrongnumberargs():
 
 # Do tests on the Leaf's extra parameters abilities.
 
+def test_extra_parameters_none():
+    leaf = Leaf()
+    assert len(leaf) == 0
+
+
 def test_extra_parameters_contains():
     leaf = Leaf(blah='3a', nd=4.2)
+    assert len(leaf) == 2
     assert 'blah' in leaf
     assert 'nd' in leaf
     assert 'somethingelse' not in leaf
@@ -326,6 +332,7 @@ def test_extra_parameters_set():
     leaf = Leaf()
     param = ('adfjadfka', 3934)
     leaf[param[0]] = param[1]
+    assert len(leaf) == 1
     assert param[0] in leaf
     assert param[1] == leaf[param[0]]
 
@@ -333,9 +340,11 @@ def test_extra_parameters_set():
 def test_extra_parameters_del():
     param = {'adfjadfka': 3934}
     leaf = Leaf(**param)
+    assert len(leaf) == len(param)
     assert list(param.keys())[0] in leaf
     del leaf[list(param.keys())[0]]
     assert list(param.keys())[0] not in leaf
+    assert len(leaf) == len(param) - 1
 
 
 def test_extra_parameters_len():
