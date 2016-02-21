@@ -413,45 +413,48 @@ class Leaf(object):
         Tree.list
         
         """
-        # Check that it is one of the allowed types, is an allowed
-        # value, and is not a forbidden value.
-        if self._valid_value_types is not None \
-                and type(self._value) not in self._valid_value_types:
-            return False
-        if self._allowed_values is not None \
-                and self._value not in self._allowed_values:
-            return False
-        if self._forbidden_values is not None \
-                and self._value in self._forbidden_values:
-            return False
-
-        # Check the value against all the simple validators. First,
-        # though, construct functions for the validators (true if
-        # valid and false otherwise).
-        vals = {'GreaterThan': lambda v, params: v > params,
-                'LessThan': lambda v, params: v < params,
-                'GreaterThanOrEqualTo': lambda v, params: v >= params,
-                'LessThanOrEqualTo': lambda v, params: v <= params,
-                'NotEqual': lambda v, params: v != params,
-                'Between': lambda v, params: v >= min(params)
-                and v <= max(params),
-                'NotBetween': lambda v, params: v <= min(params)
-                or v >= max(params)}
-        if self._validators is not None:
-            for val, params in self._validators:
-                if not vals[val](self._value, params):
-                    return False
-
-        # Check the custom validator.
-        if self._validator_function is not None:
-            try:
-                return self._validator_function(self._value,
-                                                all_settings)
-            except:
+        # Wrap in a try block to catch any exceptions that may be caused
+        # by invalid attribute values that could have slipped in.
+        try:
+            # Check that it is one of the allowed types, is an allowed
+            # value, and is not a forbidden value.
+            if self._valid_value_types is not None \
+                    and type(self._value) not in self._valid_value_types:
+                return False
+            if self._allowed_values is not None \
+                    and self._value not in self._allowed_values:
+                return False
+            if self._forbidden_values is not None \
+                    and self._value in self._forbidden_values:
                 return False
 
-        # Must be valid since all tests were passed.
-        return True
+            # Check the value against all the simple validators. First,
+            # though, construct functions for the validators (true if
+            # valid and false otherwise).
+            vals = {'GreaterThan': lambda v, params: v > params,
+                    'LessThan': lambda v, params: v < params,
+                    'GreaterThanOrEqualTo':
+                    lambda v, params: v >= params,
+                    'LessThanOrEqualTo': lambda v, params: v <= params,
+                    'NotEqual': lambda v, params: v != params,
+                    'Between': lambda v, params:
+                    v >= min(params) and v <= max(params),
+                    'NotBetween': lambda v, params:
+                    v <= min(params) or v >= max(params)}
+            if self._validators is not None:
+                for val, params in self._validators:
+                    if not vals[val](self._value, params):
+                        return False
+
+            # Check the custom validator.
+            if self._validator_function is not None:
+                return self._validator_function(self._value,
+                                                all_settings)
+
+            # Must be valid since all tests were passed.
+            return True
+        except:
+            return False
 
     # Implement a dictionary interface for all the extra parameters
     # by mapping the relevant dict functions to the functions inside

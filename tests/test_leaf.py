@@ -413,6 +413,13 @@ def test_validation_type_invalid_single():
     assert not leaf.is_valid(settings)
 
 
+def test_validation_type_invalid_damaged_attribute():
+    leaf = Leaf()
+    leaf._valid_value_types = 3.2
+    leaf.value = random.random()
+    assert not leaf.is_valid(settings)
+
+
 def test_validation_type_invalid_multi():
     leaf = Leaf(valid_value_types=(list, tuple))
     leaf.value = random.random()
