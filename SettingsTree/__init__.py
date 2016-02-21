@@ -506,9 +506,9 @@ class Tree(object):
     children : anything that inherits collections.Mapping, optional
         A ``dict`` or ``dict`` like object (inherits from
         ``collections.Mapping``) of one or more ``Tree`` and/or
-        ``Leaf`` to be put into this ``Tree``. They are added in order
-        that `children` is mapped. Each key is a POSIX path to where to
-        put the ``Leaf`` or ``Tree`` associated with it.
+        ``Leaf`` to be put into this ``Tree``. They are added in the
+        order that `children` is mapped. Each key is a POSIX path to
+        where to put the ``Leaf`` or ``Tree`` associated with it.
     **keywords : optional
         Aditional keyword arguments which are put in this ``Tree``.
 
@@ -605,7 +605,8 @@ class Tree(object):
         Raises
         ------
         KeyError
-            If the setting pointed to by `path` cannot be found.
+            If the setting pointed to by `path` cannot be found or
+            `path` is not an ``str``.
 
         See Also
         --------
@@ -618,27 +619,22 @@ class Tree(object):
     def __setitem__(self, path, value):
         """ Sets by path.
 
-        Gets, sets, or deletes by a POSIX style path. Each subdirectory
-        in the path is a ``Tree`` that holds one or more ``Tree`` and/or
-        ``Leaf``. The file part accesses the particular ``Leaf`` or
-        ``Tree``. In all cases, if a ``Leaf`` is reached in the path and
-        there is more path after that, then the rest references an extra
-        parameter in that ``Leaf`` which will be set to `value`. If
-        `value` is a ``Tree`` or ``Leaf``, then the location pointed to
-        by `path` is set to `value`. Otherwise, `path` must point to a
-        ``Leaf``, in which case its value is set to `leaf`.
-
+        Sets by a POSIX style path. Each subdirectory in the path is a
+        ``Tree`` that holds one or more ``Tree`` and/or ``Leaf``. The
+        file part accesses the particular ``Leaf`` or ``Tree``. In all
+        cases, if a ``Leaf`` is reached in the path and there is more
+        path after that, then the rest references an extra parameter in
+        that ``Leaf`` which will be set to `value`. If `value` is a
+        ``Tree`` or ``Leaf``, then the location pointed to by `path` is
+        set to `value` even if parent ``Tree`` need to be
+        made. Otherwise, `path` must point to a ``Leaf``, in which case
+        its value is set to `leaf`.
+ 
         Parameters
         ----------
         path : str
             POSIX style path to the desired setting. ``'/'`` is the root
-            of this ``Tree``. A trailing ``'/'`` has no effect unless
-            we are doing a get 'operation' in which case its presence
-            means return the Leaf or Tree pointed to by `path` instead
-            of its value (``Leaf``) or a ``list`` of its children
-            (``Tree``).
-        operation : {'get', 'set', 'del'}
-            Whether to get, set, or delete.
+            of this ``Tree``.
         value : Tree or Leaf or value, optional
             The value to set. If it is a ``Tree`` or ``Leaf``, then
             `path` points to the desired name for it. Otherwise, it is a
@@ -648,7 +644,8 @@ class Tree(object):
         Raises
         ------
         KeyError
-            If the setting pointed to by `path` cannot be found.
+            If the setting pointed to by `path` cannot be found or
+            `path` is not an ``str``.
         TypeError
             If trying to set a ``Tree`` to not a ``Tree`` or ``Leaf``.
 
@@ -661,15 +658,15 @@ class Tree(object):
         self._getsetdel_item(path, 'set', value=value)
 
     def __delitem__(self, path):
-        """ Gets, sets, or deletes by path.
+        """ Deletes by path.
 
-        Gets, sets, or deletes by a POSIX style path. Each subdirectory
-        in the path is a ``Tree`` that holds one or more ``Tree`` and/or
-        ``Leaf``. The file part accesses the particular ``Leaf`` or
-        ``Tree``. In all cases, if a ``Leaf`` is reached in the path and
-        there is more path after that, then the rest references an extra
-        parameter in that ``Leaf``. The ``Leaf``, ``Tree``, or ``Leaf``
-        extra parameter pointed to by `path` is deleted.
+        Deletes by a POSIX style path. Each subdirectory in the path is
+        a ``Tree`` that holds one or more ``Tree`` and/or ``Leaf``. The
+        file part accesses the particular ``Leaf`` or ``Tree``. In all
+        cases, if a ``Leaf`` is reached in the path and there is more
+        path after that, then the rest references an extra parameter in
+        that ``Leaf``. The ``Leaf``, ``Tree``, or ``Leaf`` extra
+        parameter pointed to by `path` is deleted.
 
         Parameters
         ----------
@@ -679,7 +676,8 @@ class Tree(object):
         Raises
         ------
         KeyError
-            If the setting pointed to by `path` cannot be found.
+            If the setting pointed to by `path` cannot be found or
+            `path` is not an ``str``.
 
         See Also
         --------
@@ -711,8 +709,8 @@ class Tree(object):
         `path` must point to a ``Leaf``, in which case its value is set
         to `leaf`.
 
-        If doing a del `operation`, the ``Leaf`` or ``Tree`` pointed to
-        by `path` is deleted.
+        If doing a del `operation`, the ``Leaf``, ``Tree``, or ``Leaf``
+        extra parameter  pointed to by `path` is deleted.
 
         Parameters
         ----------
@@ -741,7 +739,8 @@ class Tree(object):
         Raises
         ------
         KeyError
-            If the setting pointed to by `path` cannot be found.
+            If the setting pointed to by `path` cannot be found or
+            `path` is not an ``str``.
         ValueError
             `operation` is not one of the allowed operations.
         TypeError
