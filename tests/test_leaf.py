@@ -642,7 +642,8 @@ def test_validation_validator_function_invalid_notequalsetting():
     leaf = Leaf()
     name = random.choice(tuple(settings.keys()))
     leaf.validator_function = lambda x, y: x == y[name]
-    x = set([random.random() for i in range(100)]) - {settings[name]}
+    x = set([random.random() for i in range(100)]) \
+        - set([settings[name]])
     for v in x:
         leaf.value = x
         assert not leaf.is_valid(settings)

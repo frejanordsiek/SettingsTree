@@ -476,7 +476,7 @@ def test_del_leaf():
 
 
 def test_del_tree():
-    tree = Tree(children={k: Tree() for k in random_leaves})
+    tree = Tree(children=dict([(k, Tree()) for k in random_leaves]))
     keys = tuple(random_leaves.keys())
     for i in reversed(range(len(keys))):
         del tree[keys[i]]
