@@ -21,6 +21,7 @@ setup(name='SettingsTree',
       packages=['SettingsTree'],
       license='LGPLv3+',
       keywords='settings',
+      install_requires=[],
       classifiers=[
           "Programming Language :: Python :: 2.6",
           "Programming Language :: Python :: 2.7",
