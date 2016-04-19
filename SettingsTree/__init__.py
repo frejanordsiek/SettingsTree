@@ -30,6 +30,11 @@ import collections
 import numbers
 import inspect
 
+if sys.hexversion >= 0x2070000:
+    from collections import OrderedDict
+else:
+    from ordereddict import OrderedDict
+
 
 class Leaf(object):
     """ An individual setting.
@@ -536,7 +541,7 @@ class Tree(object):
     def __init__(self, children=None, **keywords):
         # Set _children to an empty ordered dict and then add the
         # elements of children one by one if it is dict like
-        self._children = collections.OrderedDict()
+        self._children = OrderedDict()
         if children is not None:
             if not isinstance(children, collections.Mapping):
                 raise TypeError('children must be a Mapping of '
