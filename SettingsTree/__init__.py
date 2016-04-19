@@ -350,7 +350,7 @@ class Leaf(object):
         if value2 is None:
             self._validator_function = None
         elif inspect.isfunction(value2) \
-                and ((sys.hexversion < 0x3030000 \
+                and ((sys.hexversion < 0x3040000 \
                 and 2 == len(inspect.getargspec(value2).args)) \
                 or (sys.hexversion >= 0x3040000 \
                 and 2 == len(inspect.signature(value2).parameters))):
