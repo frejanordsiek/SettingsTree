@@ -16,12 +16,17 @@
 
 """ Tests for SettingsTree.Tree. """
 
+import sys
 import copy
 import math
 import posixpath
 import random
 import string
-import collections
+
+if sys.hexversion >= 0x2070000:
+    from collections import OrderedDict
+else:
+    from ordereddict import OrderedDict
 
 from nose.tools import raises
 
@@ -34,7 +39,7 @@ random.seed()
 ltrs = string.ascii_letters + string.digits
 
 # Make a group of random leaves
-random_leaves = collections.OrderedDict()
+random_leaves = OrderedDict()
 for i in range(20, 40):
     name = ''.join([random.choice(ltrs)
                    for j in range(0, random.randint(4, 9))])
@@ -42,7 +47,7 @@ for i in range(20, 40):
 
 
 # Make a group of random leaves and empty trees
-random_treesAndLeaves = collections.OrderedDict()
+random_treesAndLeaves = OrderedDict()
 for i in range(20, 40):
     name = ''.join([random.choice(ltrs)
                    for j in range(0, random.randint(4, 9))])
@@ -114,7 +119,7 @@ def test_initialize_tree_invalid_nonLeafTree():
 # Test __len__
 def test_len():
     for i in range(len(random_leaves)):
-        children = collections.OrderedDict( \
+        children = OrderedDict( \
             tuple(random_leaves.items())[:i])
         tree = Tree(children=children)
         assert len(children) == len(tree)

@@ -15,9 +15,10 @@ python:
   - pypy
   - pypy3
 
-# Seem to need unittest2 on Python 2.6.
+# Need ordereddict and unittest2 on Python 2.6.
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install ordereddict; fi
   - pip install .
 
 # command to run tests
